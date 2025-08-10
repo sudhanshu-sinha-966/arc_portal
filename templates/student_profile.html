@@ -404,7 +404,7 @@
     <nav class="sidebar">
       <div class="sidebar-logo">ARC Portal</div>
       <div class="sidebar-nav">
-        <a class="sidebar-link" href="studentlandingpage.html">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="/dashboard/student">&#x1F4C8; Dashboard</a>
         <a class="sidebar-link" href="studentbrowseproject.html">&#x1F4D1; Browse Projects</a>
         <a class="sidebar-link" href="studentmyapplication.html">&#x1F4E6; My Applications</a>
         <a class="sidebar-link active" href="studentprofile.html">&#x1F464; Profile</a>
@@ -415,96 +415,141 @@
       </div>
     </nav>
     <!-- Main Content -->
-    <main class="main-content">
-      <div class="profile-title">My Profile</div>
-      <form class="profile-card" id="studentProfileForm" autocomplete="off">
-        <div class="profile-row">
-          <div class="profile-section" style="max-width:170px;">
-            <img id="profilePhoto" src="https://ui-avatars.com/api/?name=Student+Name&background=fbc2eb&color=232946&size=256" alt="Profile Photo" class="profile-photo">
-            <label class="profile-upload-label" for="photoUpload">Change Photo</label>
-            <input type="file" id="photoUpload" class="profile-photo-upload profile-upload" accept="image/*">
-          </div>
-          <div class="profile-section">
-            <label for="studentId">Student ID</label>
-            <input type="text" id="studentId" name="studentId" value="S202500123" readonly class="readonly-field">
-            <label for="fullName">Full Name</label>
-            <input type="text" id="fullName" name="fullName" value="Student Name" required>
-            <label for="gender">Gender</label>
-            <select id="gender" name="gender">
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-              <option>Prefer not to say</option>
-            </select>
-            <label for="dob">Date of Birth</label>
-            <input type="date" id="dob" name="dob" value="2003-01-01">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" value="student@university.edu" required>
-            <label for="phone">Phone Number</label>
-            <input type="text" id="phone" name="phone" value="+91 9000000000">
-            <label for="address">Mailing Address</label>
-            <textarea id="address" name="address" placeholder="Address">Hostel Block B, Room 203</textarea>
-          </div>
-          <div class="profile-section">
-            <label for="prevSchool">Previous School/Institution</label>
-            <input type="text" id="prevSchool" name="prevSchool" value="ABC Public School">
-            <label for="gradDate">Graduation Date</label>
-            <input type="month" id="gradDate" name="gradDate" value="2021-06">
-            <label for="gpa">GPA</label>
-            <input type="text" id="gpa" name="gpa" value="9.2">
-            <label for="major">Intended Major/Area of Study</label>
-            <input type="text" id="major" name="major" value="Computer Science">
-            <label for="year">Current Year</label>
-            <select id="year" name="year">
-              <option>1st Year</option>
-              <option>2nd Year</option>
-              <option>3rd Year</option>
-              <option>4th Year</option>
-              <option>Other</option>
-            </select>
-          </div>
+<!-- Main Content -->
+<main class="main-content">
+  <div class="profile-title">My Profile</div>
+
+  <!-- Added method POST, action, enctype -->
+  <form class="profile-card" id="studentProfileForm"
+        method="POST"
+        action="/profile/student/update"
+        enctype="multipart/form-data"
+        autocomplete="off">
+
+    <div class="profile-row">
+      <!-- Profile Photo -->
+      <div class="profile-section" style="max-width:170px;">
+        <img id="profilePhoto"
+             src="{{ student.profile_pic or 'https://ui-avatars.com/api/?name=' + (student.name|replace(' ','+') if student else 'Student') + '&background=fbc2eb&color=232946&size=256' }}"
+             alt="Profile Photo" class="profile-photo">
+        <label class="profile-upload-label" for="profile_pic">Change Photo</label>
+        <input type="file" id="profile_pic" name="profile_pic" class="profile-photo-upload profile-upload" accept="image/*">
+      </div>
+
+      <!-- Column 1 -->
+      <div class="profile-section">
+        <label for="studentId">Student ID</label>
+        <input type="text" id="studentId" value="{{ student.id }}" readonly class="readonly-field">
+
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" value="{{ student.name or '' }}" required>
+
+        <label for="gender">Gender</label>
+        <select id="gender" name="gender">
+          <option {% if student.gender == 'Male' %}selected{% endif %}>Male</option>
+          <option {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+          <option {% if student.gender == 'Other' %}selected{% endif %}>Other</option>
+          <option {% if student.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+        </select>
+
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" name="dob" value="{{ student.dob.strftime('%Y-%m-%d') if student.dob else '' }}">
+
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" value="{{ student.email or '' }}" required>
+
+        <label for="phone">Phone Number</label>
+        <input type="text" id="phone" name="phone" value="{{ student.phone or '' }}">
+
+        <label for="mailing_address">Mailing Address</label>
+        <textarea id="mailing_address" name="mailing_address">{{ student.mailing_address or '' }}</textarea>
+      </div>
+
+      <!-- Column 2 -->
+      <div class="profile-section">
+        <label for="previous_school">Previous School/Institution</label>
+        <input type="text" id="previous_school" name="previous_school" value="{{ student.previous_school or '' }}">
+
+        <label for="graduation_date">Graduation Date</label>
+        <input type="month" id="graduation_date" name="graduation_date" value="{{ student.graduation_date.strftime('%Y-%m') if student.graduation_date else '' }}">
+
+        <label for="gpa">GPA</label>
+        <input type="text" id="gpa" name="gpa" value="{{ student.gpa or '' }}">
+
+        <label for="intended_major">Intended Major/Area of Study</label>
+        <input type="text" id="intended_major" name="intended_major" value="{{ student.intended_major or '' }}">
+
+        <label for="current_year">Current Year</label>
+        <select id="current_year" name="current_year">
+          <option {% if student.current_year == '1st Year' %}selected{% endif %}>1st Year</option>
+          <option {% if student.current_year == '2nd Year' %}selected{% endif %}>2nd Year</option>
+          <option {% if student.current_year == '3rd Year' %}selected{% endif %}>3rd Year</option>
+          <option {% if student.current_year == '4th Year' %}selected{% endif %}>4th Year</option>
+          <option {% if student.current_year == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="profile-row">
+      <!-- Column 3 -->
+      <div class="profile-section">
+        <label for="bio">Short Bio</label>
+        <textarea id="bio" name="bio">{{ student.bio or '' }}</textarea>
+
+        <label for="extracurricular_activities">Extracurricular Activities</label>
+        <textarea id="extracurricular_activities" name="extracurricular_activities">{{ student.extracurricular_activities or '' }}</textarea>
+
+        <label for="honors_awards">Honors & Awards</label>
+        <textarea id="honors_awards" name="honors_awards">{{ student.honors_awards or '' }}</textarea>
+
+        <label for="emergency_contact_name">Emergency Contact Name</label>
+        <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="{{ student.emergency_contact_name or '' }}">
+
+        <label for="emergency_relationship">Relationship</label>
+        <input type="text" id="emergency_relationship" name="emergency_relationship" value="{{ student.emergency_relationship or '' }}">
+
+        <label for="emergency_phone">Emergency Phone</label>
+        <input type="text" id="emergency_phone" name="emergency_phone" value="{{ student.emergency_phone or '' }}">
+
+        <label for="emergency_email">Emergency Email</label>
+        <input type="email" id="emergency_email" name="emergency_email" value="{{ student.emergency_email or '' }}">
+      </div>
+
+      <!-- Column 4 -->
+      <div class="profile-section">
+        <label for="medical_info">Medical Information</label>
+        <textarea id="medical_info" name="medical_info">{{ student.medical_info or '' }}</textarea>
+
+        <label for="social_profiles">Social/Research Profiles</label>
+        <input type="text" id="social_profiles" name="social_profiles" value="{{ student.social_profiles or '' }}">
+
+        <label for="other_info">Other Information</label>
+        <textarea id="other_info" name="other_info">{{ student.other_info or '' }}</textarea>
+
+        <div class="skills-bar-group" id="skillsBarGroup">
+          <label class="skills-bar-label" for="skills_summary">Skills</label>
+          <!-- This field gets saved backend -->
+          <input type="text" id="skills_summary" name="skills_summary" value="{{ student.skills_summary or '' }}">
         </div>
-        <div class="profile-row">
-          <div class="profile-section">
-            <label for="bio">Short Bio</label>
-            <textarea id="bio" name="bio" placeholder="Write a short biography...">Enthusiastic student passionate about AI and research, looking to collaborate on innovative projects.</textarea>
-            <label for="extracurricular">Extracurricular Activities</label>
-            <textarea id="extracurricular" name="extracurricular" placeholder="List extracurriculars...">Coding Club, Football Team</textarea>
-            <label for="awards">Honors & Awards</label>
-            <textarea id="awards" name="awards" placeholder="List honors, awards, distinctions..."></textarea>
-            <label for="emergencyName">Emergency Contact Name</label>
-            <input type="text" id="emergencyName" name="emergencyName" value="Parent Name">
-            <label for="emergencyRelation">Relationship</label>
-            <input type="text" id="emergencyRelation" name="emergencyRelation" value="Father">
-            <label for="emergencyPhone">Emergency Phone</label>
-            <input type="text" id="emergencyPhone" name="emergencyPhone" value="+91 9000000001">
-            <label for="emergencyEmail">Emergency Email</label>
-            <input type="email" id="emergencyEmail" name="emergencyEmail" value="parent@domain.com">
-          </div>
-          <div class="profile-section">
-            <label for="medical">Medical Information</label>
-            <textarea id="medical" name="medical" placeholder="List any medical conditions, allergies, etc."></textarea>
-            <label for="social">Social/Research Profiles</label>
-            <input type="text" id="social" name="social" placeholder="e.g. LinkedIn, GitHub, Google Scholar">
-            <label for="other">Other Information</label>
-            <textarea id="other" name="other" placeholder="Any other relevant info..."></textarea>
-            <div class="skills-bar-group" id="skillsBarGroup">
-              <label class="skills-bar-label" for="skillsInput">Skills</label>
-              <div class="skills-bar" id="skillsBar"></div>
-              <div class="skills-dropdown-container">
-                <input type="text" id="skillsInput" class="skills-dropdown-input" placeholder="Type or select skills..." autocomplete="off">
-                <div class="skills-dropdown-list" id="skillsDropdown"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="profile-actions">
-          <button type="submit" class="profile-save-btn">Save Profile</button>
-          <button type="reset" class="profile-reset-btn">Reset Changes</button>
-          <span class="profile-success" id="profileSuccess">Profile updated successfully!</span>
-        </div>
-      </form>
-    </main>
+
+        <label for="resume_link">Resume Link</label>
+        <input type="text" id="resume_link" name="resume_link" value="{{ student.resume_link or '' }}">
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <button type="submit" class="profile-save-btn">Save Profile</button>
+      <button type="reset" class="profile-reset-btn">Reset Changes</button>
+      {% if message %}
+        <span class="profile-success" id="profileSuccess" style="display:inline-block;">{{ message }}</span>
+      {% endif %}
+      {% if error %}
+        <span class="profile-error" style="display:inline-block;color:red;">{{ error }}</span>
+      {% endif %}
+    </div>
+  </form>
+</main>
+
   </div>
   <script>
     // Example: Fetch skills from backend (replace with API call)
