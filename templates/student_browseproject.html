@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Browse Projects | Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --filter-bg: #fff;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    .search-filter-bar {
+      background: var(--filter-bg);
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #1e3c7211;
+      padding: 18px 24px 12px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: center;
+    }
+    .search-input {
+      flex: 2;
+      min-width: 220px;
+      font-size: 1.06rem;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      background: #f6f8fa;
+      color: #232946;
+      transition: border 0.18s;
+      font-family: inherit;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+    .filter-select {
+      flex: 1;
+      min-width: 140px;
+      font-size: 1.06rem;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      background: #f6f8fa;
+      color: #232946;
+      font-family: inherit;
+    }
+    .projects-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+    .project-card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 28px 26px 22px 26px;
+      min-width: 270px;
+      max-width: 340px;
+      flex: 1 1 300px;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 18px;
+      position: relative;
+      transition: box-shadow 0.2s, transform 0.2s;
+      animation: fadeIn 0.7s;
+    }
+    .project-card:hover {
+      box-shadow: 0 8px 28px #fbc2eb44;
+      transform: translateY(-4px) scale(1.025);
+    }
+    .proj-title {
+      font-size: 1.22rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 7px;
+    }
+    .proj-prof {
+      font-size: 1.02rem;
+      color: #232946b0;
+      margin-bottom: 7px;
+    }
+    .proj-dept {
+      font-size: 0.98rem;
+      color: #1e3c72a0;
+      margin-bottom: 7px;
+    }
+    .proj-topic {
+      font-size: 1.01rem;
+      color: #1e3c72c0;
+      margin-bottom: 7px;
+    }
+    .proj-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+    .proj-skill {
+      background: #fbc2eb55;
+      color: var(--primary);
+      border-radius: 6px;
+      padding: 0.19em 0.8em;
+      font-size: 0.97rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .apply-btn {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7em 1.6em;
+      font-size: 1.09rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #fbc2eb55;
+      transition: background 0.2s, transform 0.12s;
+      text-decoration: none;
+      margin-top: 10px;
+      outline: none;
+      align-self: flex-end;
+    }
+    .apply-btn[disabled] {
+      background: #e0e0e0;
+      color: #23294699;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    @media (max-width: 900px) {
+      .dashboard-container { flex-direction: column; }
+      .sidebar {
+        width: 100vw;
+        height: auto;
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        padding: 16px 0;
+        box-shadow: none;
+      }
+      .sidebar .sidebar-logo {
+        margin: 0 24px 0 24px;
+      }
+      .sidebar-nav {
+        flex-direction: row;
+        gap: 0;
+      }
+      .sidebar-link {
+        padding: 8px 14px;
+        border-radius: 12px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+      }
+      .sidebar-link.active,
+      .sidebar-link:focus {
+        border-left: none;
+        border-bottom: 3px solid var(--accent);
+        border-radius: 12px 12px 0 0;
+      }
+      .main-content {
+        margin-left: 0;
+        margin-top: 0;
+        padding: 24px 10vw 24px 10vw;
+        width: 100vw;
+        border-radius: 0;
+      }
+      .projects-list { gap: 18px; }
+    }
+    @media (max-width: 600px) {
+      .main-content {
+        padding: 12px 4px 12px 4px;
+      }
+      .page-title { font-size: 1.2rem; }
+      .project-card { padding: 12px 8px 10px 8px; min-width: 90vw; }
+      .search-filter-bar { flex-direction: column; gap: 10px; padding: 10px 6px 10px 6px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link" href="/dashboard/student">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link active" href="/student/browse-projects">&#x1F4D1; Browse Projects</a>
+        <a class="sidebar-link" href="studentmyapplication.html">&#x1F4E6; My Applications</a>
+        <a class="sidebar-link" href="/profile/student">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <!-- ...header/sidebar layout as before... -->
+
+<main class="main-content">
+  <div class="page-title">Browse All Research Projects</div>
+  
+  <!-- (You can upgrade filter dropdowns to use professor/department/topic lists from DB) -->
+  <div class="search-filter-bar">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search by title, topic, professor, or skill...">
+    <select id="filterProfessor" class="filter-select">
+      <option value="">All Professors</option>
+      {% for prof in professors %}
+        <option value="{{ prof.name }}">{{ prof.name }}</option>
+      {% endfor %}
+    </select>
+    <!-- Add similar dynamic dropdowns for topic/department if you want -->
+  </div>
+
+  <div class="projects-list">
+    {% for project, professor in projects %}
+      <div class="project-card">
+        <div class="proj-title">{{ project.title }}</div>
+        <div class="proj-prof">By {{ professor.name }}</div>
+        <div class="proj-dept">{{ professor.department or "" }}</div>
+        <div class="proj-topic">{{ project.objective or project.introduction or project.status }}</div>
+        <div class="proj-skills">
+          {% for skill in (project.required_skills or "").split(",") %}
+            <span class="proj-skill">{{ skill.strip() }}</span>
+          {% endfor %}
+        </div>
+        <!-- Application Button/Form -->
+        <form method="POST" action="/student/apply-project" style="margin:0;">
+          <input type="hidden" name="project_id" value="{{ project.id }}">
+          <button type="submit" class="apply-btn">Apply</button>
+        </form>
+        <!-- Optionally: Show "Applied" or disable button if already applied (requires Application check) -->
+      </div>
+    {% else %}
+      <div style='color:#1e3c72;font-size:1.2rem;margin-top:2em;'>No projects found.</div>
+    {% endfor %}
+  </div>
+</main>
+
+  </div>
+  <script>
+    // Demo project data (replace with API data)
+    const projects = [
+      {
+        title: "AI for Healthcare Analytics",
+        professor: "Prof. X",
+        dept: "Information Technology",
+        topic: "AI",
+        skills: ["Python", "Machine Learning", "Data Analysis", "Healthcare Informatics"],
+        canApply: true
+      },
+      {
+        title: "Blockchain for Academic Records",
+        professor: "Prof. Y",
+        dept: "Computer Science",
+        topic: "Blockchain",
+        skills: ["Blockchain", "Java", "Distributed Systems"],
+        canApply: false
+      },
+      {
+        title: "IoT in Smart Campus",
+        professor: "Prof. Z",
+        dept: "Electronics",
+        topic: "IoT",
+        skills: ["IoT", "Embedded Systems", "Networking", "Sensors"],
+        canApply: true
+      },
+      {
+        title: "Natural Language Processing Tools",
+        professor: "Prof. X",
+        dept: "Information Technology",
+        topic: "AI",
+        skills: ["Python", "NLP", "Text Mining", "Deep Learning"],
+        canApply: true
+      },
+      {
+        title: "Smart Manufacturing Systems",
+        professor: "Prof. Y",
+        dept: "Mechanical",
+        topic: "IoT",
+        skills: ["IoT", "Automation", "Sensors"],
+        canApply: true
+      }
+    ];
+
+    // Render project cards
+    function renderProjects(filteredProjects) {
+      const container = document.getElementById('projectsList');
+      container.innerHTML = '';
+      if (filteredProjects.length === 0) {
+        container.innerHTML = "<div style='color:#1e3c72;font-size:1.2rem;margin-top:2em;'>No projects found.</div>";
+        return;
+      }
+      filteredProjects.forEach((proj, idx) => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        card.innerHTML = `
+          <div class="proj-title">${proj.title}</div>
+          <div class="proj-prof">By ${proj.professor}</div>
+          <div class="proj-dept">${proj.dept}</div>
+          <div class="proj-topic">${proj.topic}</div>
+          <div class="proj-skills">
+            ${proj.skills.map(skill => `<span class="proj-skill">${skill}</span>`).join(' ')}
+          </div>
+          <button class="apply-btn" ${proj.canApply ? '' : 'disabled'}>${proj.canApply ? 'Apply' : 'View Only'}</button>
+        `;
+        // View project details on card click (except the button)
+        card.addEventListener('click', function(e) {
+          if (e.target.classList.contains('apply-btn')) return;
+          window.location.href = `projectdetails.html?id=${idx+1}`;
+        });
+        // Apply button
+        card.querySelector('.apply-btn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (proj.canApply) {
+            alert('Demo: Application process starts here.');
+          }
+        });
+        container.appendChild(card);
+      });
+    }
+
+    // Filter logic
+    function filterProjects() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const professor = document.getElementById('filterProfessor').value;
+      const topic = document.getElementById('filterTopic').value;
+      const dept = document.getElementById('filterDept').value;
+      let filtered = projects.filter(proj => {
+        let matchesSearch = proj.title.toLowerCase().includes(search) ||
+          proj.professor.toLowerCase().includes(search) ||
+          proj.topic.toLowerCase().includes(search) ||
+          proj.dept.toLowerCase().includes(search) ||
+          proj.skills.some(s => s.toLowerCase().includes(search));
+        let matchesProf = !professor || proj.professor === professor;
+        let matchesTopic = !topic || proj.topic === topic;
+        let matchesDept = !dept || proj.dept === dept;
+        return matchesSearch && matchesProf && matchesTopic && matchesDept;
+      });
+      renderProjects(filtered);
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterProjects);
+    document.getElementById('filterProfessor').addEventListener('change', filterProjects);
+    document.getElementById('filterTopic').addEventListener('change', filterProjects);
+    document.getElementById('filterDept').addEventListener('change', filterProjects);
+
+    // Initial render
+    renderProjects(projects);
+  </script>
+</body>
+</html>

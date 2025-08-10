@@ -480,4 +480,140 @@ async def update_student_profile_endpoint(
 
     return templates.TemplateResponse("student_profile.html", {"request": request, "student": student, "user": user, "message": "Profile updated successfully!"})
 
+#to get the browse project page for the student 
+
+@router.get("/student/browse-projects", response_class=HTMLResponse)
+async def browse_projects_student(request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from model import Project, Professor, Application  # import your models
+
+    # For filters, you can process query params here (not covered in this step)
+    projects = (
+        db.query(Project, Professor)
+        .join(Professor, Project.professor_id == Professor.id)
+        .filter(Project.status == "active", Project.applications_open == True)
+        .all()
+    )
+
+    # Professors list for filter dropdowns (optional)
+    professors = db.query(Professor).all()
+
+    return templates.TemplateResponse("student_browseproject.html", {
+        "request": request,
+        "user": user,
+        "projects": projects,
+        "professors": professors,
+    })
+
+#handles the logic wen apply is clicked on the browse project page in any project
+
+@router.post("/student/apply-project", response_class=HTMLResponse)
+async def apply_project_student(
+    request: Request,
+    project_id: int = Form(...),
+    message: str = Form(""),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    from model import Application, Project
+
+    if user.get("role") != "student":
+        return RedirectResponse(url="/login", status_code=303)
+    student_id = int(user.get("id") or user.get("sub"))
+
+    # Check not already applied
+    exists = db.query(Application).filter(
+        Application.student_id == student_id,
+        Application.project_id == project_id
+    ).first()
+    if exists:
+        return templates.TemplateResponse("student_browseproject.html", {
+            "request": request,
+            "user": user,
+            "error": "You have already applied to this project."
+        })
+
+    application = Application(
+        student_id=student_id,
+        project_id=project_id,
+        status="pending",
+    )
+    db.add(application)
+    db.commit()
+
+    # Success - return to browse page with a message
+    return RedirectResponse("/student/browse-projects", status_code=303)
+
+
+#to get the applications tab in professor
+
+@router.get("/professor/applications", response_class=HTMLResponse)
+async def professor_applications(request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from model import Professor, Project, Application, Student
+    professor_id = int(user.get("id") or user.get("sub"))
+    # Get all projects owned by this professor
+    projects = db.query(Project).filter(Project.professor_id == professor_id).all()
+    project_ids = [proj.id for proj in projects]
+    # Get all applications for those projects with student and project info
+    applications = (
+        db.query(Application, Student, Project)
+        .join(Student, Application.student_id == Student.id)
+        .join(Project, Application.project_id == Project.id)
+        .filter(Application.project_id.in_(project_ids))
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+    return templates.TemplateResponse("professor_applications.html", {
+        "request": request,
+        "user": user,
+        "applications": applications
+    })
+
+#to handle the status change of recieved applications
+
+@router.post("/professor/application/update-status", response_class=HTMLResponse)
+async def update_application_status(request: Request, application_id: int = Form(...), status: str = Form(...), db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from model import Application
+    app = db.query(Application).filter(Application.id == application_id).first()
+    if not app:
+        return RedirectResponse("/professor/applications", status_code=303)
+    app.status = status
+    db.commit()
+    return RedirectResponse("/professor/applications", status_code=303)
+
+#when professor clicks view profile for an applicant this works
+
+@router.get("/professor/student-profile")
+async def professor_student_profile(student_id: int, db: Session = Depends(get_db)):
+    from model import Student
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        return JSONResponse({"error": "Student not found"}, status_code=404)
+    # Return all useful profile fields
+    student_data = {
+        "id": student.id,
+        "name": student.name,
+        "email": student.email,
+        "phone": student.phone,
+        "gender": student.gender,
+        "dob": student.dob.strftime('%Y-%m-%d') if student.dob else "",
+        "branch": getattr(student, "branch", ""),  # if you have branch field
+        "semester": getattr(student, "semester", ""),
+        "bio": student.bio or "",
+        "skills_summary": student.skills_summary or "",
+        "profile_pic": student.profile_pic or "",
+        "mailing_address": student.mailing_address or "",
+        "previous_school": student.previous_school or "",
+        "gpa": student.gpa or "",
+        "intended_major": student.intended_major or "",
+        "current_year": student.current_year or "",
+        "extracurricular_activities": student.extracurricular_activities or "",
+        "honors_awards": student.honors_awards or "",
+        "medical_info": student.medical_info or "",
+        "resume_link": student.resume_link or "",
+        "emergency_contact_name": getattr(student, "emergency_contact_name", ""),
+        "emergency_relationship": getattr(student, "emergency_relationship", ""),
+        "emergency_phone": getattr(student, "emergency_phone", ""),
+        "emergency_email": getattr(student, "emergency_email", ""),
+    }
+    return JSONResponse(student_data)
 

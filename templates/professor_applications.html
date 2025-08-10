@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Applications | Professor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --status-pending: #ffb347;
+      --status-accepted: #3ecf8e;
+      --status-rejected: #ff6b81;
+      --status-shortlisted: #7ed6df;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    .applications-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 32px;
+      min-width: 900px;
+    }
+    .applications-table th, .applications-table td {
+      padding: 14px 17px;
+      text-align: left;
+      font-size: 1.04rem;
+    }
+    .applications-table th {
+      background: #fbc2eb22;
+      color: #1e3c72;
+      font-weight: 700;
+      font-size: 1.08rem;
+    }
+    .applications-table tr:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+    .student-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .student-skill {
+      background: #fbc2eb55;
+      color: var(--primary);
+      border-radius: 6px;
+      padding: 0.18em 0.8em;
+      font-size: 0.97rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .match-bar-bg {
+      width: 80px;
+      height: 14px;
+      background: #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 7px;
+    }
+    .match-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: 8px;
+      transition: width 0.3s;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.35em 1.3em;
+      border-radius: 18px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--status-pending);
+      box-shadow: 0 1px 6px #fbc2eb22;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .status-pending { background: var(--status-pending); }
+    .status-accepted { background: var(--status-accepted); }
+    .status-rejected { background: var(--status-rejected); }
+    .status-shortlisted { background: var(--status-shortlisted); }
+    .status-view { background: var(--accent); color: var(--primary);}
+    .status-select {
+      font-size: 1.03rem;
+      border-radius: 8px;
+      border: 1.5px solid #e0e0e0;
+      padding: 6px 12px;
+      background: #f6f8fa;
+      color: #232946;
+      font-family: inherit;
+      margin-right: 5px;
+    }
+    .view-profile-btn {
+      background: #fbc2eb44;
+      color: var(--primary);
+      border: none;
+      border-radius: 7px;
+      padding: 0.5em 1.2em;
+      font-size: 0.98rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+    }
+    .view-profile-btn:hover {
+      background: var(--accent);
+      color: #232946;
+    }
+    .profile-modal-bg {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: #232946b9; z-index: 900; display: flex; align-items: center; justify-content: center;
+}
+.profile-modal-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius, 16px);
+  box-shadow: 0 2px 20px #1e3c7213;
+  padding: 32px 36px 18px 36px;
+  min-width: 350px; max-width: 520px;
+  display: flex; flex-direction: column; position: relative;
+}
+.profile-modal-close {
+  position: absolute; top: 14px; right: 17px; font-size: 1.7em; color: #1e3c72; cursor: pointer;
+}
+.modal-content { display: flex; flex-direction: column; align-items: center; }
+.modal-photo { text-align: center; margin-bottom: 10px; }
+.modal-profile-name { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+.modal-profile-id { font-size: 0.98rem; color: #1e3c72a0; }
+.modal-details-table { width: 100%; margin-top: 16px; font-size: 1rem;}
+.modal-details-table div { margin-bottom: 7px;}
+.profile-photo { box-shadow: 0 1px 8px #fbc2eb44; }
+
+    @media (max-width: 1100px) {
+      .applications-table, .applications-table th, .applications-table td {
+        font-size: 0.98rem;
+        min-width: 700px;
+      }
+      .main-content { padding: 18px 6vw 18px 6vw;}
+    }
+    @media (max-width: 700px) {
+      .main-content { padding: 10px 2vw 10px 2vw;}
+      .page-title { font-size: 1.2rem; }
+      .applications-table th, .applications-table td { padding: 10px 7px;}
+      .applications-table { min-width: 420px;}
+    }
+    @media (max-width: 600px) {
+      .main-content { padding: 6px 2px 6px 2px;}
+      .applications-table { font-size: 0.92rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link" href="/dashboard/professor">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="/professor/my-projects">&#x1F4D1; My Projects</a>
+        <a class="sidebar-link" href="/professor/post-project">&#x2795; Post New Project</a>
+        <a class="sidebar-link active" href="/professor/applications">&#x1F4E6; Applications</a>
+        <a class="sidebar-link" href="/profile/professor">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="main-content">
+  <div class="page-title">All Applications Received</div>
+  <table class="applications-table">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Student</th>
+        <th>Skills</th>
+        <th>Applied On</th>
+        <th>Skill Match</th>
+        <th>Status</th>
+        <th>Profile</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for application, student, project in applications %}
+      <tr>
+        <td>{{ project.title }}</td>
+        <td>{{ student.name }}</td>
+        <td>
+          <div class="student-skills">
+            {% for skill in (student.skills_summary or '').split(',') %}
+              <span class="student-skill">{{ skill.strip() }}</span>
+            {% endfor %}
+          </div>
+        </td>
+        <td>{{ application.applied_at.strftime('%Y-%m-%d') if application.applied_at else '-' }}</td>
+        <td>
+          {% set required_skills = (project.required_skills or '').split(',') %}
+          {% set student_skills = (student.skills_summary or '').split(',') %}
+          {% set match_count = required_skills | select('in', student_skills) | list | length %}
+          {% set match_pct = ((match_count/(required_skills|length))*100) if required_skills|length > 0 else 0 %}
+          <span class="match-bar-bg">
+            <span class="match-bar" style="width:{{ match_pct|round(0, 'floor') }}%;"></span>
+          </span>
+          {{ match_pct|round(0, 'floor') }}%
+        </td>
+        <td>
+          <form method="POST" action="/professor/application/update-status" style="display:inline;">
+            <input type="hidden" name="application_id" value="{{ application.id }}">
+            <select name="status" class="status-select" onchange="this.form.submit()">
+              <option value="Pending" {{ 'selected' if application.status == 'pending' else '' }}>Pending</option>
+              <option value="Shortlisted" {{ 'selected' if application.status == 'shortlisted' else '' }}>Shortlisted</option>
+              <option value="Accepted" {{ 'selected' if application.status == 'accepted' else '' }}>Accepted</option>
+              <option value="Rejected" {{ 'selected' if application.status == 'rejected' else '' }}>Rejected</option>
+            </select>
+            <span class="status-badge status-{{ application.status|lower }}">{{ application.status.capitalize() }}</span>
+          </form>
+        </td>
+        <td>
+  <button class="view-profile-btn" onclick="showProfileModal({{ student.id }})">View Profile</button>
+</td>
+
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align:center;color:#888;font-size:1.1rem;">No applications found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
+
+  </div>
+  <!-- Modal for viewing student profile -->
+<div id="profileModal" class="profile-modal-bg" style="display:none;">
+  <div class="profile-modal-card">
+    <span class="profile-modal-close" onclick="closeProfileModal()">&times;</span>
+    <div class="modal-content">
+      <div class="modal-photo">
+        <img id="modalProfilePhoto" src="" alt="Profile Photo" class="profile-photo" style="width:110px;height:110px;border-radius:50%;margin-bottom:10px;">
+        <div id="modalProfileName" class="modal-profile-name"></div>
+        <span class="modal-profile-id" id="modalProfileID"></span>
+      </div>
+      <div class="modal-details-table">
+        <div><strong>Email:</strong> <span id="modalProfileEmail"></span></div>
+        <div><strong>Phone:</strong> <span id="modalProfilePhone"></span></div>
+        <div><strong>Gender:</strong> <span id="modalProfileGender"></span></div>
+        <div><strong>DOB:</strong> <span id="modalProfileDOB"></span></div>
+        <div><strong>Branch:</strong> <span id="modalProfileBranch"></span></div>
+        <div><strong>Semester:</strong> <span id="modalProfileSemester"></span></div>
+        <div><strong>Major:</strong> <span id="modalProfileMajor"></span></div>
+        <div><strong>GPA:</strong> <span id="modalProfileGPA"></span></div>
+        <div><strong>Previous School:</strong> <span id="modalProfilePrevSchool"></span></div>
+        <div><strong>Current Year:</strong> <span id="modalProfileCurrentYear"></span></div>
+        <div><strong>Skills:</strong> <span id="modalProfileSkills"></span></div>
+        <div><strong>Bio:</strong> <span id="modalProfileBio"></span></div>
+        <div><strong>Extracurriculars:</strong> <span id="modalProfileExtra"></span></div>
+        <div><strong>Honors & Awards:</strong> <span id="modalProfileHonors"></span></div>
+        <div><strong>Medical Info:</strong> <span id="modalProfileMedical"></span></div>
+        <div><strong>Resume:</strong> <a id="modalProfileResume" href="#" target="_blank">View</a></div>
+        <div><strong>Emergency Contact:</strong>
+          <span id="modalProfileEmergencyContact"></span> (<span id="modalProfileEmergencyRelation"></span>)<br>
+          Phone: <span id="modalProfileEmergencyPhone"></span>, Email: <span id="modalProfileEmergencyEmail"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script>
+    // Example data - replace with API fetch
+    // Each application has: projectTitle, studentName, studentSkills, requiredSkills, appliedDate, status, studentId
+
+
+    // Calculate skill match percentage
+    function skillMatch(studentSkills, requiredSkills) {
+      if (!requiredSkills || requiredSkills.length === 0) return 0;
+      const matchCount = requiredSkills.filter(skill => studentSkills.includes(skill)).length;
+      return Math.round((matchCount / requiredSkills.length) * 100);
+    }
+
+    // Sort applications by skill match (descending)
+    function sortApplications(apps) {
+      return apps.slice().sort((a, b) => skillMatch(b.studentSkills, b.requiredSkills) - skillMatch(a.studentSkills, a.requiredSkills));
+    }
+
+    function statusClass(status) {
+      switch(status.toLowerCase()) {
+        case "pending": return "status-badge status-pending";
+        case "accepted": return "status-badge status-accepted";
+        case "rejected": return "status-badge status-rejected";
+        case "shortlisted": return "status-badge status-shortlisted";
+        default: return "status-badge status-view";
+      }
+    }
+
+    function renderApplications() {
+      const tbody = document.getElementById('applicationsBody');
+      tbody.innerHTML = '';
+      const sortedApps = sortApplications(applications);
+      if(sortedApps.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;color:#888;font-size:1.1rem;'>No applications found.</td></tr>";
+        return;
+      }
+      sortedApps.forEach((app, idx) => {
+        const match = skillMatch(app.studentSkills, app.requiredSkills);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${app.projectTitle}</td>
+          <td>${app.studentName}</td>
+          <td>
+            <div class="student-skills">
+              ${app.studentSkills.map(skill => `<span class="student-skill">${skill}</span>`).join(' ')}
+            </div>
+          </td>
+          <td>${app.appliedDate}</td>
+          <td>
+            <span class="match-bar-bg">
+              <span class="match-bar" style="width:${match}%;"></span>
+            </span>
+            ${match}%
+          </td>
+          <td>
+            <select class="status-select" data-idx="${idx}">
+              <option value="Pending" ${app.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="Shortlisted" ${app.status === "Shortlisted" ? "selected" : ""}>Shortlisted</option>
+              <option value="Accepted" ${app.status === "Accepted" ? "selected" : ""}>Accepted</option>
+              <option value="Rejected" ${app.status === "Rejected" ? "selected" : ""}>Rejected</option>
+            </select>
+            <span class="${statusClass(app.status)}" id="statusBadge${idx}">${app.status}</span>
+          </td>
+          <td>
+            <button class="view-profile-btn" onclick="window.location.href='studentprofile.html?id=${app.studentId}'">View Profile</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Add event listeners for status changes
+      document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function() {
+          const i = Number(this.getAttribute('data-idx'));
+          applications[i].status = this.value;
+          document.getElementById('statusBadge'+i).textContent = this.value;
+          document.getElementById('statusBadge'+i).className = statusClass(this.value);
+          // Here, you would also trigger an API call to update the status in the backend
+        });
+      });
+    }
+    function showProfileModal(studentId) {
+  // open modal before fetch for UX
+  document.getElementById('profileModal').style.display = 'flex';
+  // Clear previous
+  [
+    'modalProfilePhoto','modalProfileName','modalProfileID','modalProfileEmail','modalProfilePhone',
+    'modalProfileGender','modalProfileDOB','modalProfileBranch','modalProfileSemester','modalProfileMajor',
+    'modalProfileGPA','modalProfilePrevSchool','modalProfileCurrentYear','modalProfileSkills','modalProfileBio',
+    'modalProfileExtra','modalProfileHonors','modalProfileMedical','modalProfileResume','modalProfileEmergencyContact',
+    'modalProfileEmergencyRelation','modalProfileEmergencyPhone','modalProfileEmergencyEmail'
+  ].forEach(id => { let el = document.getElementById(id); if(el) el.textContent=""; });
+
+  fetch(`/professor/student-profile?student_id=${studentId}`)
+    .then(resp => resp.json())
+    .then(student => {
+      document.getElementById('modalProfilePhoto').src =
+        student.profile_pic ? student.profile_pic :
+        `https://ui-avatars.com/api/?name=${(student.name||"Student").replace(' ','+')}&background=fbc2eb&color=232946&size=256`;
+
+      document.getElementById('modalProfileName').textContent = student.name || "";
+      document.getElementById('modalProfileID').textContent = "ID: " + (student.id || "");
+      document.getElementById('modalProfileEmail').textContent = student.email || "";
+      document.getElementById('modalProfilePhone').textContent = student.phone || "";
+      document.getElementById('modalProfileGender').textContent = student.gender || "";
+      document.getElementById('modalProfileDOB').textContent = student.dob || "";
+      document.getElementById('modalProfileBranch').textContent = student.branch || "";
+      document.getElementById('modalProfileSemester').textContent = student.semester || "";
+      document.getElementById('modalProfileMajor').textContent = student.intended_major || "";
+      document.getElementById('modalProfileGPA').textContent = student.gpa || "";
+      document.getElementById('modalProfilePrevSchool').textContent = student.previous_school || "";
+      document.getElementById('modalProfileCurrentYear').textContent = student.current_year || "";
+      document.getElementById('modalProfileSkills').textContent = student.skills_summary || "";
+      document.getElementById('modalProfileBio').textContent = student.bio || "";
+      document.getElementById('modalProfileExtra').textContent = student.extracurricular_activities || "";
+      document.getElementById('modalProfileHonors').textContent = student.honors_awards || "";
+      document.getElementById('modalProfileMedical').textContent = student.medical_info || "";
+      document.getElementById('modalProfileResume').href = student.resume_link || "#";
+      document.getElementById('modalProfileEmergencyContact').textContent = student.emergency_contact_name || "";
+      document.getElementById('modalProfileEmergencyRelation').textContent = student.emergency_relationship || "";
+      document.getElementById('modalProfileEmergencyPhone').textContent = student.emergency_phone || "";
+      document.getElementById('modalProfileEmergencyEmail').textContent = student.emergency_email || "";
+    })
+    .catch(() => {
+      document.getElementById('modalProfileName').textContent = "Profile could not be loaded.";
+    });
+}
+
+function closeProfileModal(){
+  document.getElementById('profileModal').style.display = 'none';
+}
+    renderApplications();
+  </script>
+</body>
+</html>
