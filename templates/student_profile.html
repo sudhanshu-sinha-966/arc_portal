@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Profile | Academic Research Collaboration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --input-bg: #f6f8fa;
+      --input-border: #e0e0e0;
+      --input-focus: #fbc2eb;
+      --tag-bg: #fbc2eb;
+      --tag-color: #1e3c72;
+      --tag-remove-bg: #e0e0e0;
+      --tag-remove-color: #1e3c72;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .profile-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    .profile-card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 32px 32px 24px 32px;
+      max-width: 800px;
+      margin-bottom: 32px;
+      margin-top: 8px;
+    }
+    .profile-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .profile-photo {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 4px solid var(--accent);
+      box-shadow: 0 2px 14px #fbc2eb33;
+    }
+    .profile-section {
+      flex: 1 1 320px;
+      min-width: 260px;
+      margin-bottom: 18px;
+    }
+    .profile-section label {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 7px;
+      font-size: 1.04rem;
+      display: block;
+    }
+    .profile-section input,
+    .profile-section textarea,
+    .profile-section select {
+      width: 100%;
+      font-size: 1.04rem;
+      border: 1.5px solid var(--input-border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      background: var(--input-bg);
+      color: #232946;
+      transition: border 0.18s;
+      font-family: inherit;
+      margin-bottom: 6px;
+      resize: vertical;
+    }
+    .profile-section input:focus,
+    .profile-section textarea:focus,
+    .profile-section select:focus {
+      border-color: var(--input-focus);
+      outline: none;
+    }
+    .profile-section textarea {
+      min-height: 60px;
+      max-height: 200px;
+    }
+    .skills-bar-group {
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .skills-bar-label {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 7px;
+      font-size: 1.04rem;
+    }
+    .skills-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 38px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .skill-tag {
+      background: var(--tag-bg);
+      color: var(--tag-color);
+      border-radius: 16px;
+      padding: 0.32em 1.1em 0.32em 0.9em;
+      font-size: 1.01rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      box-shadow: 0 1px 4px #fbc2eb44;
+      cursor: default;
+      animation: fadeIn 0.2s;
+    }
+    .skill-tag .remove-tag {
+      background: var(--tag-remove-bg);
+      color: var(--tag-remove-color);
+      border: none;
+      border-radius: 50%;
+      width: 1.3em;
+      height: 1.3em;
+      font-size: 1.1em;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 0.2em;
+      transition: background 0.16s;
+    }
+    .skill-tag .remove-tag:hover {
+      background: #ffb3b3;
+      color: #b00;
+    }
+    .skills-dropdown-container {
+      position: relative;
+      width: 100%;
+    }
+    .skills-dropdown-input {
+      width: 100%;
+      font-size: 1.04rem;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      background: #f6f8fa;
+      color: #232946;
+      transition: border 0.18s;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .skills-dropdown-input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+    .skills-dropdown-list {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 2px 18px #1e3c7211;
+      z-index: 10;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 2px;
+      display: none;
+    }
+    .skills-dropdown-list.open {
+      display: block;
+    }
+    .skills-dropdown-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 1.04rem;
+      color: var(--primary);
+      transition: background 0.16s;
+    }
+    .skills-dropdown-item:hover {
+      background: #fbc2eb33;
+    }
+    .skills-dropdown-item.selected {
+      background: #fbc2eb55;
+      color: #232946;
+      font-weight: 600;
+    }
+    .profile-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .profile-save-btn {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.95rem 2.3rem;
+      font-size: 1.07rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #fbc2eb55;
+      transition: background 0.2s, transform 0.12s;
+      text-decoration: none;
+      margin-bottom: 0.2rem;
+      outline: none;
+    }
+    .profile-save-btn:hover, .profile-save-btn:focus {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+      color: #232946;
+      transform: scale(1.03);
+    }
+    .profile-reset-btn {
+      background: #e0e0e0;
+      color: #232946;
+      border: none;
+      border-radius: 8px;
+      padding: 0.95rem 2.3rem;
+      font-size: 1.07rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #23294622;
+      transition: background 0.2s, transform 0.12s;
+      text-decoration: none;
+      margin-bottom: 0.2rem;
+      outline: none;
+    }
+    .profile-reset-btn:hover, .profile-reset-btn:focus {
+      background: #fbc2eb44;
+      color: var(--primary);
+      transform: scale(1.03);
+    }
+    .profile-success {
+      color: #3ecf8e;
+      font-weight: 600;
+      margin-top: 12px;
+      font-size: 1.1rem;
+      display: none;
+    }
+    .readonly-field {
+      background: #e9ecef !important;
+      color: #888 !important;
+      font-weight: 600;
+      cursor: not-allowed;
+    }
+    @media (max-width: 900px) {
+      .dashboard-container { flex-direction: column; }
+      .sidebar {
+        width: 100vw;
+        height: auto;
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        padding: 16px 0;
+        box-shadow: none;
+      }
+      .sidebar .sidebar-logo {
+        margin: 0 24px 0 24px;
+      }
+      .sidebar-nav {
+        flex-direction: row;
+        gap: 0;
+      }
+      .sidebar-link {
+        padding: 8px 14px;
+        border-radius: 12px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+      }
+      .sidebar-link.active,
+      .sidebar-link:focus {
+        border-left: none;
+        border-bottom: 3px solid var(--accent);
+        border-radius: 12px 12px 0 0;
+      }
+      .main-content {
+        margin-left: 0;
+        margin-top: 0;
+        padding: 24px 10vw 24px 10vw;
+        width: 100vw;
+        border-radius: 0;
+      }
+      .profile-row { flex-direction: column; gap: 0; }
+    }
+    @media (max-width: 600px) {
+      .main-content {
+        padding: 18px 6px 18px 6px;
+      }
+      .profile-title { font-size: 1.2rem; }
+      .profile-card { padding: 12px 2vw 12px 2vw; }
+      .profile-photo { width: 68px; height: 68px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link" href="studentlandingpage.html">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="studentbrowseproject.html">&#x1F4D1; Browse Projects</a>
+        <a class="sidebar-link" href="studentmyapplication.html">&#x1F4E6; My Applications</a>
+        <a class="sidebar-link active" href="studentprofile.html">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="landingpage.html" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="profile-title">My Profile</div>
+      <form class="profile-card" id="studentProfileForm" autocomplete="off">
+        <div class="profile-row">
+          <div class="profile-section" style="max-width:170px;">
+            <img id="profilePhoto" src="https://ui-avatars.com/api/?name=Student+Name&background=fbc2eb&color=232946&size=256" alt="Profile Photo" class="profile-photo">
+            <label class="profile-upload-label" for="photoUpload">Change Photo</label>
+            <input type="file" id="photoUpload" class="profile-photo-upload profile-upload" accept="image/*">
+          </div>
+          <div class="profile-section">
+            <label for="studentId">Student ID</label>
+            <input type="text" id="studentId" name="studentId" value="S202500123" readonly class="readonly-field">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" value="Student Name" required>
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+              <option>Prefer not to say</option>
+            </select>
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="dob" name="dob" value="2003-01-01">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" value="student@university.edu" required>
+            <label for="phone">Phone Number</label>
+            <input type="text" id="phone" name="phone" value="+91 9000000000">
+            <label for="address">Mailing Address</label>
+            <textarea id="address" name="address" placeholder="Address">Hostel Block B, Room 203</textarea>
+          </div>
+          <div class="profile-section">
+            <label for="prevSchool">Previous School/Institution</label>
+            <input type="text" id="prevSchool" name="prevSchool" value="ABC Public School">
+            <label for="gradDate">Graduation Date</label>
+            <input type="month" id="gradDate" name="gradDate" value="2021-06">
+            <label for="gpa">GPA</label>
+            <input type="text" id="gpa" name="gpa" value="9.2">
+            <label for="major">Intended Major/Area of Study</label>
+            <input type="text" id="major" name="major" value="Computer Science">
+            <label for="year">Current Year</label>
+            <select id="year" name="year">
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>4th Year</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-section">
+            <label for="bio">Short Bio</label>
+            <textarea id="bio" name="bio" placeholder="Write a short biography...">Enthusiastic student passionate about AI and research, looking to collaborate on innovative projects.</textarea>
+            <label for="extracurricular">Extracurricular Activities</label>
+            <textarea id="extracurricular" name="extracurricular" placeholder="List extracurriculars...">Coding Club, Football Team</textarea>
+            <label for="awards">Honors & Awards</label>
+            <textarea id="awards" name="awards" placeholder="List honors, awards, distinctions..."></textarea>
+            <label for="emergencyName">Emergency Contact Name</label>
+            <input type="text" id="emergencyName" name="emergencyName" value="Parent Name">
+            <label for="emergencyRelation">Relationship</label>
+            <input type="text" id="emergencyRelation" name="emergencyRelation" value="Father">
+            <label for="emergencyPhone">Emergency Phone</label>
+            <input type="text" id="emergencyPhone" name="emergencyPhone" value="+91 9000000001">
+            <label for="emergencyEmail">Emergency Email</label>
+            <input type="email" id="emergencyEmail" name="emergencyEmail" value="parent@domain.com">
+          </div>
+          <div class="profile-section">
+            <label for="medical">Medical Information</label>
+            <textarea id="medical" name="medical" placeholder="List any medical conditions, allergies, etc."></textarea>
+            <label for="social">Social/Research Profiles</label>
+            <input type="text" id="social" name="social" placeholder="e.g. LinkedIn, GitHub, Google Scholar">
+            <label for="other">Other Information</label>
+            <textarea id="other" name="other" placeholder="Any other relevant info..."></textarea>
+            <div class="skills-bar-group" id="skillsBarGroup">
+              <label class="skills-bar-label" for="skillsInput">Skills</label>
+              <div class="skills-bar" id="skillsBar"></div>
+              <div class="skills-dropdown-container">
+                <input type="text" id="skillsInput" class="skills-dropdown-input" placeholder="Type or select skills..." autocomplete="off">
+                <div class="skills-dropdown-list" id="skillsDropdown"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button type="submit" class="profile-save-btn">Save Profile</button>
+          <button type="reset" class="profile-reset-btn">Reset Changes</button>
+          <span class="profile-success" id="profileSuccess">Profile updated successfully!</span>
+        </div>
+      </form>
+    </main>
+  </div>
+  <script>
+    // Example: Fetch skills from backend (replace with API call)
+    const allSkills = [
+      "Python", "Java", "C++", "Machine Learning", "Data Analysis", "NLP", "IoT", "Blockchain",
+      "Healthcare Informatics", "Deep Learning", "Embedded Systems", "Networking", "Sensors", "Web Development"
+    ];
+    // State
+    let selectedSkills = ["Python", "Machine Learning"];
+    // Elements
+    const skillsBar = document.getElementById('skillsBar');
+    const skillsInput = document.getElementById('skillsInput');
+    const skillsDropdown = document.getElementById('skillsDropdown');
+    // Render selected skills as tags
+    function renderSkillsBar() {
+      skillsBar.innerHTML = '';
+      selectedSkills.forEach(skill => {
+        const tag = document.createElement('span');
+        tag.className = 'skill-tag';
+        tag.textContent = skill;
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-tag';
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = () => {
+          selectedSkills = selectedSkills.filter(s => s !== skill);
+          renderSkillsBar();
+          renderSkillsDropdown();
+        };
+        tag.appendChild(removeBtn);
+        skillsBar.appendChild(tag);
+      });
+    }
+    // Render dropdown options
+    function renderSkillsDropdown() {
+      const query = skillsInput.value.toLowerCase();
+      let filtered = allSkills.filter(skill =>
+        skill.toLowerCase().includes(query) && !selectedSkills.includes(skill)
+      );
+      skillsDropdown.innerHTML = '';
+      if (filtered.length === 0 && query && !allSkills.includes(skillsInput.value)) {
+        // Option to add a new skill
+        const newSkillItem = document.createElement('div');
+        newSkillItem.className = 'skills-dropdown-item';
+        newSkillItem.textContent = `Add "${skillsInput.value}"`;
+        newSkillItem.onclick = () => {
+          selectedSkills.push(skillsInput.value);
+          skillsInput.value = '';
+          renderSkillsBar();
+          renderSkillsDropdown();
+        };
+        skillsDropdown.appendChild(newSkillItem);
+      } else {
+        filtered.forEach(skill => {
+          const item = document.createElement('div');
+          item.className = 'skills-dropdown-item';
+          item.textContent = skill;
+          item.onclick = () => {
+            selectedSkills.push(skill);
+            skillsInput.value = '';
+            renderSkillsBar();
+            renderSkillsDropdown();
+          };
+          skillsDropdown.appendChild(item);
+        });
+      }
+      skillsDropdown.classList.toggle('open', skillsDropdown.childNodes.length > 0 && document.activeElement === skillsInput);
+    }
+    // Show/hide dropdown on input focus/blur
+    skillsInput.addEventListener('focus', () => {
+      renderSkillsDropdown();
+    });
+    skillsInput.addEventListener('input', () => {
+      renderSkillsDropdown();
+    });
+    skillsInput.addEventListener('keydown', (e) => {
+      if (e.key === "Enter" && skillsDropdown.childNodes.length > 0) {
+        e.preventDefault();
+        skillsDropdown.childNodes[0].click();
+      }
+      if (e.key === "Backspace" && !skillsInput.value && selectedSkills.length > 0) {
+        selectedSkills.pop();
+        renderSkillsBar();
+        renderSkillsDropdown();
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('skillsBarGroup').contains(e.target)) {
+        skillsDropdown.classList.remove('open');
+      }
+    });
+    // Photo upload preview
+    document.getElementById('photoUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('profilePhoto').src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    // Demo: Save profile (frontend only)
+    document.getElementById('studentProfileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const success = document.getElementById('profileSuccess');
+      success.style.display = 'inline-block';
+      setTimeout(() => { success.style.display = 'none'; }, 2500);
+    });
+    // Initial render
+    renderSkillsBar();
+    renderSkillsDropdown();
+  </script>
+</body>
+</html>

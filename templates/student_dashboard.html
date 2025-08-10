@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard | Academic Research Collaboration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --stat-bg: #fff;
+      --stat-shadow: 0 2px 10px #fbc2eb33;
+      --tag-bg: #fbc2eb;
+      --tag-color: #1e3c72;
+      --tag-remove-bg: #e0e0e0;
+      --tag-remove-color: #1e3c72;
+      --success: #3ecf8e;
+      --pending: #ffb347;
+      --shortlisted: #7ed6df;
+      --rejected: #ff6b81;
+      --accepted: #3ecf8e;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+      margin: 0;
+    }
+    .edit-profile-btn {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7em 1.6em;
+      font-size: 1.09rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #fbc2eb55;
+      transition: background 0.2s, transform 0.12s;
+      text-decoration: none;
+      outline: none;
+      margin-left: 18px;
+    }
+    .edit-profile-btn:hover {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+      color: #232946;
+      transform: scale(1.03);
+    }
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--stat-bg);
+      box-shadow: var(--stat-shadow);
+      border-radius: 16px;
+      padding: 22px 32px;
+      min-width: 160px;
+      flex: 1 1 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .stat-label {
+      color: #1e3c72b0;
+      font-size: 1.04rem;
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+    .stat-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0;
+    }
+    .skills-section {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 24px 32px 18px 32px;
+      margin-bottom: 28px;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+    }
+    .skills-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .skills-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .edit-skills-btn {
+      background: #fbc2eb33;
+      color: var(--primary);
+      border: none;
+      border-radius: 7px;
+      padding: 0.5em 1.2em;
+      font-size: 0.98rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+      margin-left: 10px;
+    }
+    .edit-skills-btn:hover {
+      background: var(--accent);
+      color: #232946;
+    }
+    .skills-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 38px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .skill-tag {
+      background: var(--tag-bg);
+      color: var(--tag-color);
+      border-radius: 16px;
+      padding: 0.32em 1.1em 0.32em 0.9em;
+      font-size: 1.01rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      box-shadow: 0 1px 4px #fbc2eb44;
+      cursor: default;
+      animation: fadeIn 0.2s;
+    }
+    .skill-tag .remove-tag {
+      background: var(--tag-remove-bg);
+      color: var(--tag-remove-color);
+      border: none;
+      border-radius: 50%;
+      width: 1.3em;
+      height: 1.3em;
+      font-size: 1.1em;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 0.2em;
+      transition: background 0.16s;
+    }
+    .skill-tag .remove-tag:hover {
+      background: #ffb3b3;
+      color: #b00;
+    }
+    .skills-dropdown-container {
+      position: relative;
+      width: 100%;
+      max-width: 350px;
+      margin-top: 8px;
+    }
+    .skills-dropdown-input {
+      width: 100%;
+      font-size: 1.04rem;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      background: #f6f8fa;
+      color: #232946;
+      transition: border 0.18s;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .skills-dropdown-input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+    .skills-dropdown-list {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 2px 18px #1e3c7211;
+      z-index: 10;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 2px;
+      display: none;
+    }
+    .skills-dropdown-list.open {
+      display: block;
+    }
+    .skills-dropdown-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 1.04rem;
+      color: var(--primary);
+      transition: background 0.16s;
+    }
+    .skills-dropdown-item:hover {
+      background: #fbc2eb33;
+    }
+    .skills-dropdown-item.selected {
+      background: #fbc2eb55;
+      color: #232946;
+      font-weight: 600;
+    }
+    .recent-apps-section {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 24px 32px 18px 32px;
+      margin-bottom: 18px;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+    }
+    .recent-apps-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .recent-apps-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: none;
+      margin-bottom: 0;
+    }
+    .recent-apps-table th, .recent-apps-table td {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 1.01rem;
+    }
+    .recent-apps-table th {
+      background: #fbc2eb22;
+      color: #1e3c72;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .recent-apps-table tr:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.23em 1.1em;
+      border-radius: 12px;
+      font-size: 0.97rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--pending);
+      box-shadow: 0 1px 6px #fbc2eb22;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .status-pending { background: var(--pending); }
+    .status-accepted { background: var(--accepted); }
+    .status-rejected { background: var(--rejected); }
+    .status-shortlisted { background: var(--shortlisted); }
+    .status-view { background: var(--accent); color: var(--primary);}
+    @media (max-width: 1100px) {
+      .main-content { padding: 18px 6vw 18px 6vw;}
+      .recent-apps-section, .skills-section { padding: 18px 10px 12px 10px; }
+    }
+    @media (max-width: 700px) {
+      .main-content { padding: 10px 2vw 10px 2vw;}
+      .page-title { font-size: 1.2rem; }
+      .recent-apps-table th, .recent-apps-table td { padding: 7px 4px;}
+      .recent-apps-table { min-width: 420px;}
+      .stats-row { gap: 10px;}
+    }
+    @media (max-width: 600px) {
+      .main-content { padding: 6px 2px 6px 2px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link active" href="studentlandingpage.html">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="studentbrowseproject.html">&#x1F4D1; Browse Projects</a>
+        <a class="sidebar-link" href="studentmyapplication.html">&#x1F4E6; My Applications</a>
+        <a class="sidebar-link" href="/profile/student">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="dashboard-header">
+        <h1 class="page-title">Welcome, {{ user.name }}!</h1>
+        <a href="/profile/student" class="edit-profile-btn">&#x270E; Edit Profile</a>
+      </div>
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Applications</div>
+          <div class="stat-value">{{ total_applications or 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Accepted</div>
+          <div class="stat-value">{{ accepted or 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-value">{{ shortlisted or 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ pending or 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value">{{ rejected or 0 }}</div>
+        </div>
+      </div>
+      <div class="skills-section">
+        <div class="skills-header-row">
+          <span class="skills-title">Your Skills</span>
+          <button type="button" class="edit-skills-btn" id="toggleEditSkills">&#x270E; Edit Skills</button>
+        </div>
+        <div class="skills-bar" id="skillsBar"></div>
+        <div class="skills-dropdown-container" id="skillsDropdownContainer" style="display:none;">
+          <input type="text" id="skillsInput" class="skills-dropdown-input" placeholder="Type or select skills..." autocomplete="off">
+          <div class="skills-dropdown-list" id="skillsDropdown"></div>
+        </div>
+      </div>
+      <div class="recent-apps-section">
+        <div class="recent-apps-title">Recent Applications</div>
+        <table class="recent-apps-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Professor</th>
+              <th>Status</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+  {% for app, project, prof in recent_applications %}
+    <tr>
+      <td>{{ project.title }}</td>
+      <td>{{ prof.name }}</td>
+      <td>
+        <span class="status-badge status-{{ app.status|lower }}">{{ app.status|capitalize }}</span>
+      </td>
+      <td>
+        <a href="/student/project/{{ project.id }}">View</a>
+      </td>
+    </tr>
+  {% else %}
+    <tr>
+      <td colspan="4" style="text-align:center;color:#888;font-size:1.1rem;">No applications found.</td>
+    </tr>
+  {% endfor %}
+</tbody>
+
+        </table>
+      </div>
+    </main>
+  </div>
+  <script>
+    // Demo data for stats and applications
+    const applications = [
+      {
+        projectTitle: "AI for Healthcare Analytics",
+        professor: "Prof. X",
+        status: "Pending",
+        projectId: 1
+      },
+      {
+        projectTitle: "Blockchain for Academic Records",
+        professor: "Prof. Y",
+        status: "Shortlisted",
+        projectId: 2
+      },
+      {
+        projectTitle: "IoT in Smart Campus",
+        professor: "Prof. Z",
+        status: "Accepted",
+        projectId: 3
+      },
+      {
+        projectTitle: "Natural Language Processing Tools",
+        professor: "Prof. X",
+        status: "Rejected",
+        projectId: 4
+      }
+    ];
+
+    // Stats calculation
+    function updateStats() {
+      document.getElementById('statTotal').textContent = applications.length;
+      document.getElementById('statAccepted').textContent = applications.filter(a => a.status === "Accepted").length;
+      document.getElementById('statShortlisted').textContent = applications.filter(a => a.status === "Shortlisted").length;
+      document.getElementById('statPending').textContent = applications.filter(a => a.status === "Pending").length;
+      document.getElementById('statRejected').textContent = applications.filter(a => a.status === "Rejected").length;
+    }
+
+    function statusClass(status) {
+      switch(status.toLowerCase()) {
+        case "pending": return "status-badge status-pending";
+        case "accepted": return "status-badge status-accepted";
+        case "rejected": return "status-badge status-rejected";
+        case "shortlisted": return "status-badge status-shortlisted";
+        default: return "status-badge status-view";
+      }
+    }
+
+    function renderRecentApplications() {
+      const tbody = document.getElementById('recentAppsBody');
+      tbody.innerHTML = '';
+      if(applications.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:#888;font-size:1.1rem;'>No applications found.</td></tr>";
+        return;
+      }
+      applications.slice(0,5).forEach(app => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${app.projectTitle}</td>
+          <td>${app.professor}</td>
+          <td><span class="${statusClass(app.status)}">${app.status}</span></td>
+          <td><a href="projectdetails.html?id=${app.projectId}">View</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Skills logic
+    const allSkills = [
+      "Python", "Java", "C++", "Machine Learning", "Data Analysis", "NLP", "IoT", "Blockchain",
+      "Healthcare Informatics", "Deep Learning", "Embedded Systems", "Networking", "Sensors", "Web Development"
+    ];
+    let selectedSkills = ["Python", "Machine Learning"];
+    let editMode = false;
+    const skillsBar = document.getElementById('skillsBar');
+    const skillsInput = document.getElementById('skillsInput');
+    const skillsDropdown = document.getElementById('skillsDropdown');
+    const skillsDropdownContainer = document.getElementById('skillsDropdownContainer');
+    const toggleEditSkills = document.getElementById('toggleEditSkills');
+
+    function renderSkillsBar() {
+      skillsBar.innerHTML = '';
+      selectedSkills.forEach(skill => {
+        const tag = document.createElement('span');
+        tag.className = 'skill-tag';
+        tag.textContent = skill;
+        if (editMode) {
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-tag';
+          removeBtn.type = 'button';
+          removeBtn.innerHTML = '&times;';
+          removeBtn.onclick = () => {
+            selectedSkills = selectedSkills.filter(s => s !== skill);
+            renderSkillsBar();
+            renderSkillsDropdown();
+          };
+          tag.appendChild(removeBtn);
+        }
+        skillsBar.appendChild(tag);
+      });
+    }
+    function renderSkillsDropdown() {
+      const query = skillsInput.value.toLowerCase();
+      let filtered = allSkills.filter(skill =>
+        skill.toLowerCase().includes(query) && !selectedSkills.includes(skill)
+      );
+      skillsDropdown.innerHTML = '';
+      if (filtered.length === 0 && query && !allSkills.includes(skillsInput.value)) {
+        const newSkillItem = document.createElement('div');
+        newSkillItem.className = 'skills-dropdown-item';
+        newSkillItem.textContent = `Add "${skillsInput.value}"`;
+        newSkillItem.onclick = () => {
+          selectedSkills.push(skillsInput.value);
+          skillsInput.value = '';
+          renderSkillsBar();
+          renderSkillsDropdown();
+        };
+        skillsDropdown.appendChild(newSkillItem);
+      } else {
+        filtered.forEach(skill => {
+          const item = document.createElement('div');
+          item.className = 'skills-dropdown-item';
+          item.textContent = skill;
+          item.onclick = () => {
+            selectedSkills.push(skill);
+            skillsInput.value = '';
+            renderSkillsBar();
+            renderSkillsDropdown();
+          };
+          skillsDropdown.appendChild(item);
+        });
+      }
+      skillsDropdown.classList.toggle('open', skillsDropdown.childNodes.length > 0 && document.activeElement === skillsInput);
+    }
+    skillsInput.addEventListener('focus', () => {
+      renderSkillsDropdown();
+    });
+    skillsInput.addEventListener('input', () => {
+      renderSkillsDropdown();
+    });
+    skillsInput.addEventListener('keydown', (e) => {
+      if (e.key === "Enter" && skillsDropdown.childNodes.length > 0) {
+        e.preventDefault();
+        skillsDropdown.childNodes[0].click();
+      }
+      if (e.key === "Backspace" && !skillsInput.value && selectedSkills.length > 0) {
+        selectedSkills.pop();
+        renderSkillsBar();
+        renderSkillsDropdown();
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!skillsDropdownContainer.contains(e.target)) {
+        skillsDropdown.classList.remove('open');
+      }
+    });
+
+    toggleEditSkills.addEventListener('click', () => {
+      editMode = !editMode;
+      skillsDropdownContainer.style.display = editMode ? 'block' : 'none';
+      toggleEditSkills.innerHTML = editMode ? '&#x2714; Done' : '&#x270E; Edit Skills';
+      renderSkillsBar();
+      if (editMode) skillsInput.focus();
+    });
+
+    // Initial render
+    updateStats();
+    renderRecentApplications();
+    renderSkillsBar();
+    renderSkillsDropdown();
+  </script>
+</body>
+</html>

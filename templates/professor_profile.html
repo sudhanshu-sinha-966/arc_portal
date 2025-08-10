@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Professor Profile | Academic Research Collaboration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --input-bg: #f6f8fa;
+      --input-border: #e0e0e0;
+      --input-focus: #fbc2eb;
+      --success: #3ecf8e;
+      --readonly-bg: #e9ecef;
+      --readonly-color: #888;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .profile-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    .profile-card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 32px 32px 24px 32px;
+      max-width: 900px;
+      margin-bottom: 32px;
+      margin-top: 8px;
+    }
+    .profile-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .profile-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 4px solid var(--accent);
+      box-shadow: 0 2px 14px #fbc2eb33;
+    }
+    .profile-photo-upload {
+      margin-bottom: 18px;
+    }
+    .profile-section {
+      flex: 1 1 320px;
+      min-width: 260px;
+      margin-bottom: 18px;
+    }
+    .profile-section label {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 7px;
+      font-size: 1.04rem;
+      display: block;
+    }
+    .profile-section input,
+    .profile-section textarea,
+    .profile-section select {
+      width: 100%;
+      font-size: 1.04rem;
+      border: 1.5px solid var(--input-border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      background: var(--input-bg);
+      color: #232946;
+      transition: border 0.18s;
+      font-family: inherit;
+      margin-bottom: 6px;
+      resize: vertical;
+    }
+    .profile-section input:focus,
+    .profile-section textarea:focus,
+    .profile-section select:focus {
+      border-color: var(--input-focus);
+      outline: none;
+    }
+    .profile-section textarea {
+      min-height: 60px;
+      max-height: 200px;
+    }
+    .profile-section .profile-cv-link {
+      word-break: break-all;
+      color: var(--primary);
+      text-decoration: underline;
+      font-size: 1rem;
+      margin-top: 4px;
+      display: block;
+    }
+    .profile-section .profile-cv-link:hover {
+      color: var(--accent);
+    }
+    .profile-section .profile-upload-label {
+      color: #232946b0;
+      font-size: 0.99rem;
+      margin-bottom: 2px;
+    }
+    .profile-section .profile-upload {
+      margin-bottom: 7px;
+    }
+    .profile-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .profile-save-btn {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.95rem 2.3rem;
+      font-size: 1.07rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #fbc2eb55;
+      transition: background 0.2s, transform 0.12s;
+      text-decoration: none;
+      margin-bottom: 0.2rem;
+      outline: none;
+    }
+    .profile-save-btn:hover, .profile-save-btn:focus {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+      color: #232946;
+      transform: scale(1.03);
+    }
+    .profile-reset-btn {
+      background: #e0e0e0;
+      color: #232946;
+      border: none;
+      border-radius: 8px;
+      padding: 0.95rem 2.3rem;
+      font-size: 1.07rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #23294622;
+      transition: background 0.2s, transform 0.12s;
+      text-decoration: none;
+      margin-bottom: 0.2rem;
+      outline: none;
+    }
+    .profile-reset-btn:hover, .profile-reset-btn:focus {
+      background: #fbc2eb44;
+      color: var(--primary);
+      transform: scale(1.03);
+    }
+    .profile-success {
+      color: var(--success);
+      font-weight: 600;
+      margin-top: 12px;
+      font-size: 1.1rem;
+      display: none;
+    }
+    .readonly-field {
+      background: var(--readonly-bg) !important;
+      color: var(--readonly-color) !important;
+      font-weight: 600;
+      cursor: not-allowed;
+    }
+    @media (max-width: 900px) {
+      .dashboard-container { flex-direction: column; }
+      .sidebar {
+        width: 100vw;
+        height: auto;
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        padding: 16px 0;
+        box-shadow: none;
+      }
+      .sidebar .sidebar-logo {
+        margin: 0 24px 0 24px;
+      }
+      .sidebar-nav {
+        flex-direction: row;
+        gap: 0;
+      }
+      .sidebar-link {
+        padding: 8px 14px;
+        border-radius: 12px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+      }
+      .sidebar-link.active,
+      .sidebar-link:focus {
+        border-left: none;
+        border-bottom: 3px solid var(--accent);
+        border-radius: 12px 12px 0 0;
+      }
+      .main-content {
+        margin-left: 0;
+        margin-top: 0;
+        padding: 24px 10vw 24px 10vw;
+        width: 100vw;
+        border-radius: 0;
+      }
+      .profile-row { flex-direction: column; gap: 0; }
+    }
+    @media (max-width: 600px) {
+      .main-content {
+        padding: 18px 6px 18px 6px;
+      }
+      .profile-title { font-size: 1.2rem; }
+      .profile-card { padding: 12px 2vw 12px 2vw; }
+      .profile-photo { width: 68px; height: 68px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link" href="/dashboard/professor">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="/professor/my-projects">&#x1F4D1; My Projects</a>
+        <a class="sidebar-link" href="/professor/post-project">&#x2795; Post New Project</a>
+        <a class="sidebar-link" href="professorapplication.html">&#x1F4E6; Applications</a>
+        <a class="sidebar-link active" href="/profile/professor">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="main-content">
+  <div class="profile-title">My Profile</div>
+  <form class="profile-card" id="professorProfileForm" autocomplete="off" method="POST" action="/profile/professor/update" enctype="multipart/form-data">
+    <div class="profile-row">
+      <div class="profile-section" style="max-width:170px;">
+        <img id="profilePhoto"
+             src="{{ prof.profile_pic or 'https://ui-avatars.com/api/?name=' + (prof.name|replace(' ','+') if prof else 'Prof') + '&background=fbc2eb&color=232946&size=256' }}"
+             alt="Profile Photo" class="profile-photo">
+        <label class="profile-upload-label" for="profile_pic">Change Photo</label>
+        <input type="file" id="profile_pic" name="profile_pic" class="profile-photo-upload profile-upload" accept="image/*">
+      </div>
+      <div class="profile-section">
+        <label for="professorId">Professor ID</label>
+        <input type="text" id="professorId" name="professorId" value="{{ prof.id }}" readonly class="readonly-field">
+
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" value="{{ prof.name or '' }}" required>
+
+        <label for="pronouns">Pronouns</label>
+        <input type="text" id="pronouns" name="pronouns" value="{{ prof.pronouns or '' }}" placeholder="e.g. he/him">
+
+        <label for="pronunciation">Name Pronunciation (URL)</label>
+        <input type="text" id="pronunciation" name="pronunciation" value="{{ prof.pronunciation or '' }}" placeholder="Paste NameCoach URL">
+
+        <label for="email">Institutional Email</label>
+        <input type="email" id="email" name="email" value="{{ prof.email or '' }}" required>
+
+        <label for="phone">Phone Number</label>
+        <input type="text" id="phone" name="phone" value="{{ prof.phone or '' }}">
+
+        <label for="office_location">Office Location</label>
+        <input type="text" id="office_location" name="office_location" value="{{ prof.office_location or '' }}">
+
+        <label for="department">Department</label>
+        <input type="text" id="department" name="department" value="{{ prof.department or '' }}">
+
+        <label for="affiliation">Affiliation</label>
+        <input type="text" id="affiliation" name="affiliation" value="{{ prof.affiliation or '' }}">
+      </div>
+      <div class="profile-section">
+        <label for="titles">Title(s) / Position(s)</label>
+        <input type="text" id="titles" name="titles" value="{{ prof.titles or '' }}">
+
+        <label for="bio">Short Bio</label>
+        <textarea id="bio" name="bio" placeholder="Write a short biography...">{{ prof.bio or '' }}</textarea>
+
+        <label for="expertise">Areas of Expertise / Research Interests</label>
+        <textarea id="expertise" name="expertise" placeholder="e.g. AI, IoT, Data Science, NLP">{{ prof.expertise or '' }}</textarea>
+
+        <label for="education">Education</label>
+        <textarea id="education" name="education" placeholder="e.g. Ph.D. in Computer Science, MIT, 2022">{{ prof.education or '' }}</textarea>
+
+        <label for="cv_link">CV / Resume (URL)</label>
+        <input type="text" id="cv_link" name="cv_link" value="{{ prof.cv_link or '' }}" placeholder="Paste CV/Resume link">
+        {% if prof.cv_link %}
+          <a href="{{ prof.cv_link }}" id="cvLink" class="profile-cv-link" target="_blank">View CV/Resume</a>
+        {% else %}
+          <a href="#" id="cvLink" class="profile-cv-link" style="display:none;">View CV/Resume</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-section">
+        <label for="publications">Selected Publications</label>
+        <textarea id="publications" name="publications" placeholder="List selected publications...">{{ prof.publications or '' }}</textarea>
+
+        <label for="grants">Grants & Funded Projects</label>
+        <textarea id="grants" name="grants" placeholder="List grants, projects, funding...">{{ prof.grants or '' }}</textarea>
+
+        <label for="awards">Honors & Awards</label>
+        <textarea id="awards" name="awards" placeholder="List honors, awards, distinctions...">{{ prof.awards or '' }}</textarea>
+
+        <label for="memberships">Professional Memberships</label>
+        <textarea id="memberships" name="memberships" placeholder="e.g. IEEE, ACM, ISTE">{{ prof.memberships or '' }}</textarea>
+
+        <label for="social_links">Social/Research Profiles</label>
+        <input type="text" id="social_links" name="social_links" value="{{ prof.social_links or '' }}" placeholder="e.g. ORCID, Google Scholar, LinkedIn">
+      </div>
+      <div class="profile-section">
+        <label for="news">In the News / Media Mentions</label>
+        <textarea id="news" name="news" placeholder="Links or notes about news stories...">{{ prof.news or '' }}</textarea>
+
+        <label for="other_info">Other Information</label>
+        <textarea id="other_info" name="other_info" placeholder="Any other relevant info...">{{ prof.other_info or '' }}</textarea>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button type="submit" class="profile-save-btn">Save Profile</button>
+      <button type="reset" class="profile-reset-btn">Reset Changes</button>
+      {% if message %}
+        <span class="profile-success" id="profileSuccess" style="display:inline-block;">{{ message }}</span>
+      {% endif %}
+    </div>
+  </form>
+</main>
+
+<script>
+  // Preview photo *before* uploading
+  document.getElementById('profile_pic').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('profilePhoto').src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Auto-update & show CV link if filled
+  document.getElementById('cv_link').addEventListener('input', function(e) {
+    const link = e.target.value.trim();
+    const cvLink = document.getElementById('cvLink');
+    if (link) {
+      cvLink.href = link;
+      cvLink.style.display = "block";
+    } else {
+      cvLink.style.display = "none";
+    }
+  });
+
+  // Remove demo profileSuccess JS—serving handled by backend/Jinja
+</script>
+
+</body>
+</html>

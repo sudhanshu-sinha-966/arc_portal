@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Professor Dashboard | Academic Research Collaboration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --card-shadow-hover: 0 10px 24px rgba(30, 60, 114, 0.12);
+      --stat-icon-bg: linear-gradient(135deg, #1e3c72 60%, #fbc2eb 100%);
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .welcome-header {
+      font-size: 2.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--primary);
+      letter-spacing: 1px;
+    }
+    .date-header {
+      font-size: 1.08rem;
+      color: #232946bb;
+      margin-bottom: 32px;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+    }
+    .stats-cards {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 28px 32px 24px 32px;
+      min-width: 220px;
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      transition: box-shadow 0.22s, transform 0.22s;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-4px) scale(1.025);
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      color: #fff;
+      background: var(--stat-icon-bg);
+      margin-bottom: 18px;
+      box-shadow: 0 2px 10px #1e3c7233;
+    }
+    .stat-title {
+      font-size: 1.05rem;
+      color: #232946cc;
+      font-weight: 600;
+      margin-bottom: 6px;
+      letter-spacing: 0.2px;
+    }
+    .stat-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 1px;
+    }
+    /* Quick Links Section */
+    .quick-links {
+      margin-bottom: 36px;
+    }
+    .quick-links-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .quick-links-list {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .quick-link-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #1e3c7211;
+      padding: 18px 24px;
+      text-decoration: none;
+      color: #232946;
+      font-weight: 600;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: box-shadow 0.18s, background 0.18s, color 0.18s;
+      min-width: 180px;
+    }
+    .quick-link-card:hover {
+      background: var(--accent);
+      color: #1e3c72;
+      box-shadow: 0 8px 18px #fbc2eb44;
+    }
+    /* Recent Projects Table */
+    .section-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 14px;
+      margin-top: 18px;
+    }
+    .projects-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px #1e3c7211;
+      margin-bottom: 32px;
+    }
+    .projects-table th, .projects-table td {
+      padding: 14px 16px;
+      text-align: left;
+    }
+    .projects-table th {
+      background: #fbc2eb22;
+      color: #1e3c72;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .projects-table tr:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+    .projects-table td a {
+      color: var(--primary);
+      text-decoration: underline;
+      font-weight: 500;
+      transition: color 0.18s;
+    }
+    .projects-table td a:hover {
+      color: var(--accent);
+    }
+    /* Responsive */
+    @media (max-width: 900px) {
+      .dashboard-container { flex-direction: column; }
+      .sidebar {
+        width: 100vw;
+        height: auto;
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        padding: 16px 0;
+        box-shadow: none;
+      }
+      .sidebar .sidebar-logo {
+        margin: 0 24px 0 24px;
+      }
+      .sidebar-nav {
+        flex-direction: row;
+        gap: 0;
+      }
+      .sidebar-link {
+        padding: 8px 14px;
+        border-radius: 12px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+      }
+      .sidebar-link.active,
+      .sidebar-link:focus {
+        border-left: none;
+        border-bottom: 3px solid var(--accent);
+        border-radius: 12px 12px 0 0;
+      }
+      .main-content {
+        margin-left: 0;
+        margin-top: 0;
+        padding: 24px 10vw 24px 10vw;
+        width: 100vw;
+        border-radius: 0;
+      }
+      .stats-cards { flex-direction: column; gap: 20px; }
+      .quick-links-list { flex-direction: column; gap: 12px; }
+    }
+    .projects-table td a.view-link {
+  color: var(--primary);
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.18s;
+  cursor: pointer;
+}
+.projects-table td a.view-link:hover {
+  color: var(--accent);
+}
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(30, 60, 114, 0.12);
+  backdrop-filter: blur(2px);
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  margin: auto;
+  border-radius: 16px;
+  padding: 32px 32px 24px 32px;
+  width: 95%;
+  max-width: 540px;
+  box-shadow: 0 6px 32px #1e3c7233;
+  position: relative;
+  animation: fadeInModal 0.3s;
+}
+@keyframes fadeInModal {
+  from { opacity: 0; transform: translateY(40px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+.close-modal {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-size: 1.5rem;
+  color: #1e3c72;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-weight: 700;
+  transition: color 0.18s;
+}
+.close-modal:hover {
+  color: #fbc2eb;
+}
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+.modal-section {
+  margin-bottom: 10px;
+}
+.modal-section b {
+  color: #1e3c72;
+}
+.modal-section span {
+  color: #232946;
+}
+
+    @media (max-width: 600px) {
+      .main-content {
+        padding: 18px 8px 18px 8px;
+      }
+      .welcome-header { font-size: 1.3rem; }
+      .stat-card { min-width: 120px; padding: 18px 12px 16px 12px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+      .stat-title { font-size: 0.98rem; }
+      .stat-value { font-size: 1.3rem; }
+      .projects-table th, .projects-table td { padding: 10px 7px; font-size: 0.98rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link active" href="/dashboard/professor">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="/professor/my-projects">&#x1F4D1; My Projects</a>
+        <a class="sidebar-link" href="/professor/post-project">&#x2795; Post New Project</a>
+        <a class="sidebar-link" href="professorapplication.html">&#x1F4E6; Applications</a>
+        <a class="sidebar-link" href="/profile/professor">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="welcome-header">Welcome, {{user.name}}!</div>
+      <div class="date-header" id="liveDatetime"></div>
+
+      <!-- Stats Cards -->
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-icon">&#x1F4D6;</div>
+          <div class="stat-title">Total Projects</div>
+          <div class="stat-value">{{ total_projects }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">&#x1F393;</div>
+          <div class="stat-title">Students Applied</div>
+          <div class="stat-value">{{ student_applied }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">&#x23F3;</div>
+          <div class="stat-title">Active Projects</div>
+          <div class="stat-value">{{ active_projects }}</div>
+        </div>
+      </div>
+
+      <!-- Quick Links Section -->
+      <div class="quick-links">
+        <div class="quick-links-title">Quick Actions</div>
+        <div class="quick-links-list">
+          <a class="quick-link-card" href="/professor/post-project">&#x2795; Post New Project</a>
+          <a class="quick-link-card" href="professormyprojectpage.html">&#x1F4D1; View All Projects</a>
+          <a class="quick-link-card" href="/professor/applications">&#x1F4E6; Review Applications</a>
+          <a class="quick-link-card" href="/profile/professor">&#x1F464; Edit Profile</a>
+        </div>
+      </div>
+
+      <!-- Recent Projects Table -->
+      <div class="section-title">Recent Projects</div>
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>Project Title</th>
+            <th>Status</th>
+            <th>Applications</th>
+            <th>Last Updated</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+         <tbody>
+    {% for project in recent_projects %}
+      <tr>
+        <td>{{ project.title }}</td>
+        <td>{{ project.status|capitalize }}</td>
+        <td>{{ project.applications|length }}</td>
+        <td>{{ project.updated_at.strftime("%b %d, %Y") if project.updated_at else "" }}</td>
+        <td><a href="#" class="view-link" data-project="{{ project.id }}">View</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5"><em>No recent projects found.</em></td></tr>
+    {% endfor %}
+  </tbody>
+      </table>
+
+      <!-- Applications Overview -->
+      <div class="section-title">Recent Applications</div>
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Applied On</th>
+            <th>Profile</th>
+          </tr>
+        </thead>
+        <tbody>
+    {% for app, student, project in recent_applications %}
+      <tr>
+        <td>{{ student.name }}</td>
+        <td>{{ project.title }}</td>
+        <td>{{ app.status|capitalize }}</td>
+        <td>{{ app.applied_at.strftime("%b %d, %Y") if app.applied_at else "" }}</td>
+        <td><a href="/professor/applications/{{ app.id }}">View</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5"><em>No applications found.</em></td></tr>
+    {% endfor %}
+  </tbody>
+      </table>
+    </main>
+  </div>
+  <div class="modal" id="project-modal">
+  <div class="modal-content">
+    <button class="close-modal" id="closeProjectModal">&times;</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody">
+      <!-- Dynamic fields will be inserted here -->
+    </div>
+  </div>
+</div>
+
+
+  <script>
+function updateDateTime() {
+    const now = new Date();
+    // Formats: Weekday, Month Day, Year, h:mm:ss AM/PM TZ
+    // Get options for toLocaleString
+    const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZoneName: 'short'
+    };
+    // Get local time string
+    const pretty = now.toLocaleString('en-IN', options);
+    document.getElementById('liveDatetime').textContent = pretty;
+}
+
+//project view karne keliye js
+document.querySelectorAll('.view-link').forEach(function(link) {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    const projectId = link.getAttribute('data-project');
+    fetch(`/api/professor/project/${projectId}`)
+      .then(response => response.json())
+      .then(project => {
+        if (project.error) {
+          alert(project.error);
+          return;
+        }
+        document.getElementById('modalTitle').textContent = project.title + " (" + (project.status || "").charAt(0).toUpperCase() + (project.status || "").slice(1) + ")";
+        document.getElementById('modalBody').innerHTML = `
+          <div class="modal-section"><b>Project ID:</b> <span>${project.id}</span></div>
+          <div class="modal-section"><b>Introduction:</b> <span>${project.introduction || '-'}</span></div>
+          <div class="modal-section"><b>Problem:</b> <span>${project.problem_definition || '-'}</span></div>
+          <div class="modal-section"><b>Objective:</b> <span>${project.objective || '-'}</span></div>
+          <div class="modal-section"><b>Methodology:</b> <span>${project.methodology || '-'}</span></div>
+          <div class="modal-section"><b>Scope:</b> <span>${project.scope || '-'}</span></div>
+          <div class="modal-section"><b>Timeline:</b> <span>${project.timeline || '-'}</span></div>
+          <div class="modal-section"><b>Required Skills:</b> <span>${project.required_skills || '-'}</span></div>
+          <div class="modal-section"><b>Last Updated:</b> <span>${project.updated_at || '-'}</span></div>
+          <div class="modal-section"><b>Applications:</b> <span>${project.applications_count !== null ? project.applications_count : '-'}</span></div>
+        `;
+        document.getElementById('project-modal').style.display = 'flex';
+      })
+      .catch(() => alert('Failed to load project details'));
+  });
+});
+
+// Modal close handlers
+document.getElementById('closeProjectModal').onclick = function() {
+  document.getElementById('project-modal').style.display = 'none';
+};
+// Also close when clicking backdrop
+document.getElementById('project-modal').onclick = function(e) {
+  if (e.target === this) this.style.display = 'none';
+};
+
+// Update immediately and then every second
+updateDateTime();
+setInterval(updateDateTime, 1000);
+</script>
+
+</body>
+</html>
