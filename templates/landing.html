@@ -320,7 +320,18 @@
           <input type="email" id="loginEmail" name="email" placeholder="Institutional Email" required autocomplete="username">
           <input type="password" id="loginPassword" name="password" placeholder="Password" required autocomplete="current-password">
           <input type="hidden" name="role" id="loginRoleInput" value="">
-          <div class="error" id="loginError">{% if login_error %}{{ login_error }}{% endif %}</div>
+          <div class="error" id="loginError">
+            {% if login_error %}{{ login_error }}{% endif %}
+            {% if role_mismatch and suggested_role %}
+            <div class="role-suggestion" style="margin-top: 10px; padding: 10px; background: rgba(255,193,7,0.2); border: 1px solid #ffc107; border-radius: 8px; color: #fff;">
+              <strong>💡 Quick Fix:</strong> 
+              <button type="button" id="switchRoleBtn" data-role="{{ suggested_role }}" 
+                      style="background: #ffc107; color: #000; border: none; padding: 5px 10px; border-radius: 4px; margin-left: 10px; cursor: pointer; font-weight: bold;">
+                Switch to {{ suggested_role.title() }}
+              </button>
+            </div>
+            {% endif %}
+          </div>
           <button type="submit">Login</button>
         </form>
 
@@ -454,10 +465,35 @@ registerProfessorBtn.onclick = function() {
   setVisibility(registerProfessorForm);
 };
 
+// Handle role switch button for role mismatch
+const switchRoleBtn = document.getElementById('switchRoleBtn');
+if (switchRoleBtn) {
+  switchRoleBtn.onclick = function() {
+    const suggestedRole = this.getAttribute('data-role');
+    // Clear error message
+    document.getElementById('loginError').innerHTML = '';
+    
+    // Switch to the suggested role
+    if (suggestedRole === 'student') {
+      loginStudentBtn.click();
+    } else if (suggestedRole === 'professor') {
+      loginProfessorBtn.click();
+    }
+  };
+}
+
 // --- On page load, show login by default or handle success redirect ---
 // Check if there's a success message to auto-redirect to login
 const hasStudentSuccess = document.querySelector('.success');
-if (hasStudentSuccess) {
+const hasRoleMismatch = document.querySelector('.role-suggestion');
+
+if (hasRoleMismatch) {
+  // If there's a role mismatch, show login form directly
+  showLoginBtn.click();
+  setTimeout(() => {
+    setVisibility(loginForm);
+  }, 100);
+} else if (hasStudentSuccess) {
   // If student registration was successful, show login form
   showLoginBtn.click();
   setTimeout(() => {

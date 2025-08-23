@@ -412,7 +412,7 @@
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-label">Total Applications</div>
-          <div class="stat-value">{{user.total_applications}}</div>
+          <div class="stat-value">{{ total_applications }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Accepted</div>
@@ -450,10 +450,11 @@
               <th>Project</th>
               <th>Professor</th>
               <th>Status</th>
+              <th>Applied Date</th>
               <th>Details</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="recentAppsBody">
   {% for app, project, prof in recent_applications %}
     <tr>
       <td>{{ project.title }}</td>
@@ -461,13 +462,14 @@
       <td>
         <span class="status-badge status-{{ app.status|lower }}">{{ app.status|capitalize }}</span>
       </td>
+      <td>{{ app.applied_at.strftime('%b %d, %Y') if app.applied_at else 'N/A' }}</td>
       <td>
-        <a href="/student/project/{{ project.id }}">View</a>
+        <button class="view-project-btn" data-project-id="{{ project.id }}" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 4px; cursor: pointer;">View</button>
       </td>
     </tr>
   {% else %}
     <tr>
-      <td colspan="4" style="text-align:center;color:#888;font-size:1.1rem;">No applications found.</td>
+      <td colspan="5" style="text-align:center;color:#888;font-size:1.1rem;">No applications found.</td>
     </tr>
   {% endfor %}
 </tbody>
@@ -477,69 +479,54 @@
     </main>
   </div>
   <script>
-    // Demo data for stats and applications
-    const applications = [
-      {
-        projectTitle: "AI for Healthcare Analytics",
-        professor: "Prof. X",
-        status: "Pending",
-        projectId: 1
-      },
-      {
-        projectTitle: "Blockchain for Academic Records",
-        professor: "Prof. Y",
-        status: "Shortlisted",
-        projectId: 2
-      },
-      {
-        projectTitle: "IoT in Smart Campus",
-        professor: "Prof. Z",
-        status: "Accepted",
-        projectId: 3
-      },
-      {
-        projectTitle: "Natural Language Processing Tools",
-        professor: "Prof. X",
-        status: "Rejected",
-        projectId: 4
-      }
-    ];
-
-    // Stats calculation
-    function updateStats() {
-      document.getElementById('statTotal').textContent = applications.length;
-      document.getElementById('statAccepted').textContent = applications.filter(a => a.status === "Accepted").length;
-      document.getElementById('statShortlisted').textContent = applications.filter(a => a.status === "Shortlisted").length;
-      document.getElementById('statPending').textContent = applications.filter(a => a.status === "Pending").length;
-      document.getElementById('statRejected').textContent = applications.filter(a => a.status === "Rejected").length;
-    }
-
-    function statusClass(status) {
-      switch(status.toLowerCase()) {
-        case "pending": return "status-badge status-pending";
-        case "accepted": return "status-badge status-accepted";
-        case "rejected": return "status-badge status-rejected";
-        case "shortlisted": return "status-badge status-shortlisted";
-        default: return "status-badge status-view";
+    // View project details function
+    async function viewProjectDetails(projectId) {
+      try {
+        const response = await fetch(`/api/student/project/${projectId}`);
+        if (response.ok) {
+          const project = await response.json();
+          showProjectModal(project);
+        } else {
+          alert('Failed to load project details');
+        }
+      } catch (error) {
+        console.error('Error fetching project details:', error);
+        alert('Error loading project details');
       }
     }
-
-    function renderRecentApplications() {
-      const tbody = document.getElementById('recentAppsBody');
-      tbody.innerHTML = '';
-      if(applications.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:#888;font-size:1.1rem;'>No applications found.</td></tr>";
-        return;
-      }
-      applications.slice(0,5).forEach(app => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${app.projectTitle}</td>
-          <td>${app.professor}</td>
-          <td><span class="${statusClass(app.status)}">${app.status}</span></td>
-          <td><a href="projectdetails.html?id=${app.projectId}">View</a></td>
-        `;
-        tbody.appendChild(tr);
+    
+    // Show project modal
+    function showProjectModal(project) {
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+      
+      modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: var(--primary); margin: 0;">${project.title}</h2>
+            <button onclick="this.closest('div[style*="position: fixed"]').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+          </div>
+          <div>
+            <div style="margin-bottom: 15px;"><strong>Introduction:</strong><br>${project.introduction || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Problem Definition:</strong><br>${project.problem_definition || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Objective:</strong><br>${project.objective || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Methodology:</strong><br>${project.methodology || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Scope:</strong><br>${project.scope || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Timeline:</strong><br>${project.timeline || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Required Skills:</strong><br>${project.required_skills || 'Not specified'}</div>
+            <div style="margin-bottom: 15px;"><strong>Status:</strong> ${project.status}</div>
+            <div style="margin-bottom: 15px;"><strong>Last Updated:</strong> ${project.updated_at}</div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Close modal when clicking outside
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
       });
     }
 
@@ -548,7 +535,8 @@
       "Python", "Java", "C++", "Machine Learning", "Data Analysis", "NLP", "IoT", "Blockchain",
       "Healthcare Informatics", "Deep Learning", "Embedded Systems", "Networking", "Sensors", "Web Development"
     ];
-    let selectedSkills = ["Python", "Machine Learning"];
+    let selectedSkills = [];
+    // Initialize skills from backend data - moved to DOMContentLoaded
     let editMode = false;
     const skillsBar = document.getElementById('skillsBar');
     const skillsInput = document.getElementById('skillsInput');
@@ -641,11 +629,84 @@
       if (editMode) skillsInput.focus();
     });
 
-    // Initial render
-    updateStats();
-    renderRecentApplications();
-    renderSkillsBar();
-    renderSkillsDropdown();
+    // Load stats dynamically
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/student/stats');
+        if (response.ok) {
+          const stats = await response.json();
+          document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = stats.total_applications;
+          document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = stats.accepted;
+          document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = stats.shortlisted;
+          document.querySelector('.stat-card:nth-child(4) .stat-value').textContent = stats.pending;
+          document.querySelector('.stat-card:nth-child(5) .stat-value').textContent = stats.rejected;
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Load recent applications dynamically
+    async function loadRecentApplications() {
+      try {
+        const response = await fetch('/api/student/recent-applications');
+        if (response.ok) {
+          const data = await response.json();
+          const tbody = document.getElementById('recentAppsBody');
+          tbody.innerHTML = '';
+          
+          if (data.applications.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;font-size:1.1rem;">No applications found.</td></tr>';
+          } else {
+            data.applications.forEach(app => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${app.project_title}</td>
+                <td>${app.professor_name}</td>
+                <td><span class="status-badge status-${app.status.toLowerCase()}">${app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span></td>
+                <td>${app.applied_at}</td>
+                <td><button class="view-project-btn" data-project-id="${app.project_id}" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 4px; cursor: pointer;">View</button></td>
+              `;
+              tbody.appendChild(row);
+            });
+            
+            // Re-add event listeners for new view buttons
+            document.querySelectorAll('.view-project-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const projectId = parseInt(this.getAttribute('data-project-id'));
+                viewProjectDetails(projectId);
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading recent applications:', error);
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize skills from backend data
+      {% if skills %}
+      selectedSkills = {{ skills|tojson }};
+      {% endif %}
+      
+      // Load dynamic data
+      loadStats();
+      loadRecentApplications();
+      
+      // Add event listeners for existing view project buttons
+      document.querySelectorAll('.view-project-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const projectId = parseInt(this.getAttribute('data-project-id'));
+          viewProjectDetails(projectId);
+        });
+      });
+      
+      // Initialize skills
+      renderSkillsBar();
+      renderSkillsDropdown();
+    });
   </script>
 </body>
 </html>

@@ -34,10 +34,21 @@ def register_professor(db: Session, data: ProfessorRegisterRequest) -> str:
     return None  # Success
 
 def authenticate_user(db: Session, email: str, password: str, role: str):
+    # Check if user exists in the requested role table
     UserModel = Student if role == "student" else Professor
     user = db.query(UserModel).filter(UserModel.email == email).first()
+    
     if user and check_password(password, user.password):
         return user
+    
+    # Check if user exists in the opposite role table for better error messaging
+    OppositeModel = Professor if role == "student" else Student
+    opposite_user = db.query(OppositeModel).filter(OppositeModel.email == email).first()
+    
+    if opposite_user:
+        # User exists but trying to login with wrong role
+        return "role_mismatch"
+    
     return None
 
 def create_user_jwt(user, role: str):

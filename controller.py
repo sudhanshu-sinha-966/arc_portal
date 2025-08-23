@@ -95,9 +95,22 @@ async def login(
     db: Session = Depends(get_db),
 ):
     user = service.authenticate_user(db, email, password, role)
+    
+    if user == "role_mismatch":
+        # User exists but trying to login with wrong role
+        opposite_role = "professor" if role == "student" else "student"
+        error_msg = f"This email is registered as a {opposite_role}. Please select the correct role and try again."
+        return templates.TemplateResponse("landing.html", {
+            "request": request, 
+            "login_error": error_msg,
+            "role_mismatch": True,
+            "suggested_role": opposite_role
+        })
+    
     if not user:
         # Return landing page with error
-        return templates.TemplateResponse("landing.html", {"request": request, "login_error": "Invalid credentials or role."})
+        return templates.TemplateResponse("landing.html", {"request": request, "login_error": "Invalid credentials."})
+    
     token = service.create_user_jwt(user, role)
     response = RedirectResponse(url=f"/dashboard/{role}", status_code=status.HTTP_302_FOUND)
     # Set HTTPOnly cookie for the token (demo style; can use secure/session for prod)
@@ -613,6 +626,57 @@ async def get_student_project_detail(project_id: int, db: Session = Depends(get_
         "updated_at": project.updated_at.strftime("%b %d, %Y") if project.updated_at else "",
         "required_skills": project.required_skills,
     }
+
+# API endpoint for student dashboard stats
+@router.get("/api/student/stats")
+async def get_student_stats(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") != "student":
+        return {"error": "Unauthorized"}, 401
+    
+    student_id = int(user.get("id") or user.get("sub"))
+    total_applications = db.query(Application).filter(Application.student_id == student_id).count() or 0
+    accepted = db.query(Application).filter(Application.student_id == student_id, Application.status == "accepted").count() or 0
+    shortlisted = db.query(Application).filter(Application.student_id == student_id, Application.status == "shortlisted").count() or 0
+    pending = db.query(Application).filter(Application.student_id == student_id, Application.status == "pending").count() or 0
+    rejected = db.query(Application).filter(Application.student_id == student_id, Application.status == "rejected").count() or 0
+    
+    return {
+        "total_applications": total_applications,
+        "accepted": accepted,
+        "shortlisted": shortlisted,
+        "pending": pending,
+        "rejected": rejected
+    }
+
+# API endpoint for student recent applications
+@router.get("/api/student/recent-applications")
+async def get_student_recent_applications(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") != "student":
+        return {"error": "Unauthorized"}, 401
+    
+    student_id = int(user.get("id") or user.get("sub"))
+    recent_applications = (
+        db.query(Application, Project, Professor)
+        .join(Project, Application.project_id == Project.id)
+        .join(Professor, Project.professor_id == Professor.id)
+        .filter(Application.student_id == student_id)
+        .order_by(Application.applied_at.desc())
+        .limit(5)
+        .all()
+    )
+    
+    applications_data = []
+    for app, project, prof in recent_applications:
+        applications_data.append({
+            "application_id": app.id,
+            "project_id": project.id,
+            "project_title": project.title,
+            "professor_name": prof.name,
+            "status": app.status,
+            "applied_at": app.applied_at.strftime('%b %d, %Y') if app.applied_at else 'N/A'
+        })
+    
+    return {"applications": applications_data}
 
 #when professor clicks view profile for an applicant this works
 
