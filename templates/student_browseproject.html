@@ -294,7 +294,7 @@
       <div class="sidebar-nav">
         <a class="sidebar-link" href="/dashboard/student">&#x1F4C8; Dashboard</a>
         <a class="sidebar-link active" href="/student/browse-projects">&#x1F4D1; Browse Projects</a>
-        <a class="sidebar-link" href="studentmyapplication.html">&#x1F4E6; My Applications</a>
+        <a class="sidebar-link" href="/student/my-applications">&#x1F4E6; My Applications</a>
         <a class="sidebar-link" href="/profile/student">&#x1F464; Profile</a>
         <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
       </div>
@@ -332,11 +332,14 @@
             <span class="proj-skill">{{ skill.strip() }}</span>
           {% endfor %}
         </div>
-        <!-- Application Button/Form -->
-        <form method="POST" action="/student/apply-project" style="margin:0;">
-          <input type="hidden" name="project_id" value="{{ project.id }}">
-          <button type="submit" class="apply-btn">Apply</button>
-        </form>
+        <!-- View and Apply Buttons -->
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button type="button" class="apply-btn view-btn" data-project-id="{{ project.id }}" style="background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); flex: 1;">View Details</button>
+          <form method="POST" action="/student/apply-project" style="margin:0; flex: 1;" class="apply-form" data-project-id="{{ project.id }}">
+            <input type="hidden" name="project_id" value="{{ project.id }}">
+            <button type="submit" class="apply-btn" id="apply-btn-{{ project.id }}">Apply</button>
+          </form>
+        </div>
         <!-- Optionally: Show "Applied" or disable button if already applied (requires Application check) -->
       </div>
     {% else %}
@@ -346,115 +349,155 @@
 </main>
 
   </div>
-  <script>
-    // Demo project data (replace with API data)
-    const projects = [
-      {
-        title: "AI for Healthcare Analytics",
-        professor: "Prof. X",
-        dept: "Information Technology",
-        topic: "AI",
-        skills: ["Python", "Machine Learning", "Data Analysis", "Healthcare Informatics"],
-        canApply: true
-      },
-      {
-        title: "Blockchain for Academic Records",
-        professor: "Prof. Y",
-        dept: "Computer Science",
-        topic: "Blockchain",
-        skills: ["Blockchain", "Java", "Distributed Systems"],
-        canApply: false
-      },
-      {
-        title: "IoT in Smart Campus",
-        professor: "Prof. Z",
-        dept: "Electronics",
-        topic: "IoT",
-        skills: ["IoT", "Embedded Systems", "Networking", "Sensors"],
-        canApply: true
-      },
-      {
-        title: "Natural Language Processing Tools",
-        professor: "Prof. X",
-        dept: "Information Technology",
-        topic: "AI",
-        skills: ["Python", "NLP", "Text Mining", "Deep Learning"],
-        canApply: true
-      },
-      {
-        title: "Smart Manufacturing Systems",
-        professor: "Prof. Y",
-        dept: "Mechanical",
-        topic: "IoT",
-        skills: ["IoT", "Automation", "Sensors"],
-        canApply: true
-      }
-    ];
+  <!-- Project Details Modal -->
+  <div id="projectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 id="modalTitle" style="color: var(--primary); margin: 0;">Project Details</h2>
+        <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+      </div>
+      <div id="modalContent">Loading...</div>
+    </div>
+  </div>
 
-    // Render project cards
-    function renderProjects(filteredProjects) {
-      const container = document.getElementById('projectsList');
-      container.innerHTML = '';
-      if (filteredProjects.length === 0) {
-        container.innerHTML = "<div style='color:#1e3c72;font-size:1.2rem;margin-top:2em;'>No projects found.</div>";
-        return;
+  <script>
+    // Applied projects tracking
+    let appliedProjects = new Set();
+    
+    // Load applied projects from session storage
+    function loadAppliedProjects() {
+      const stored = sessionStorage.getItem('appliedProjects');
+      if (stored) {
+        appliedProjects = new Set(JSON.parse(stored));
+        updateApplyButtons();
       }
-      filteredProjects.forEach((proj, idx) => {
-        const card = document.createElement('div');
-        card.className = 'project-card';
-        card.innerHTML = `
-          <div class="proj-title">${proj.title}</div>
-          <div class="proj-prof">By ${proj.professor}</div>
-          <div class="proj-dept">${proj.dept}</div>
-          <div class="proj-topic">${proj.topic}</div>
-          <div class="proj-skills">
-            ${proj.skills.map(skill => `<span class="proj-skill">${skill}</span>`).join(' ')}
-          </div>
-          <button class="apply-btn" ${proj.canApply ? '' : 'disabled'}>${proj.canApply ? 'Apply' : 'View Only'}</button>
-        `;
-        // View project details on card click (except the button)
-        card.addEventListener('click', function(e) {
-          if (e.target.classList.contains('apply-btn')) return;
-          window.location.href = `projectdetails.html?id=${idx+1}`;
-        });
-        // Apply button
-        card.querySelector('.apply-btn').addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (proj.canApply) {
-            alert('Demo: Application process starts here.');
-          }
-        });
-        container.appendChild(card);
+    }
+    
+    // Save applied projects to session storage
+    function saveAppliedProjects() {
+      sessionStorage.setItem('appliedProjects', JSON.stringify([...appliedProjects]));
+    }
+    
+    // Update apply button states
+    function updateApplyButtons() {
+      appliedProjects.forEach(projectId => {
+        const btn = document.getElementById(`apply-btn-${projectId}`);
+        if (btn) {
+          btn.textContent = 'Applied';
+          btn.disabled = true;
+          btn.style.background = '#e0e0e0';
+          btn.style.color = '#666';
+        }
       });
     }
-
-    // Filter logic
+    
+    // View project details
+    async function viewProject(projectId) {
+      try {
+        const response = await fetch(`/api/student/project/${projectId}`);
+        if (response.ok) {
+          const project = await response.json();
+          document.getElementById('modalTitle').textContent = project.title;
+          document.getElementById('modalContent').innerHTML = `
+            <div style="margin-bottom: 15px;"><strong>Introduction:</strong><br>${project.introduction || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Problem Definition:</strong><br>${project.problem_definition || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Objective:</strong><br>${project.objective || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Methodology:</strong><br>${project.methodology || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Scope:</strong><br>${project.scope || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Timeline:</strong><br>${project.timeline || 'Not provided'}</div>
+            <div style="margin-bottom: 15px;"><strong>Required Skills:</strong><br>${project.required_skills || 'Not specified'}</div>
+            <div style="margin-bottom: 15px;"><strong>Status:</strong> ${project.status}</div>
+            <div style="margin-bottom: 15px;"><strong>Last Updated:</strong> ${project.updated_at}</div>
+          `;
+          document.getElementById('projectModal').style.display = 'block';
+        } else {
+          alert('Failed to load project details');
+        }
+      } catch (error) {
+        console.error('Error fetching project details:', error);
+        alert('Error loading project details');
+      }
+    }
+    
+    // Close modal
+    function closeModal() {
+      document.getElementById('projectModal').style.display = 'none';
+    }
+    
+    // Handle apply button click
+    function handleApply(event, projectId) {
+      if (appliedProjects.has(projectId)) {
+        event.preventDefault();
+        alert('You have already applied to this project.');
+        return false;
+      }
+      
+      // Add to applied projects
+      appliedProjects.add(projectId);
+      saveAppliedProjects();
+      
+      // Update button immediately
+      const btn = document.getElementById(`apply-btn-${projectId}`);
+      if (btn) {
+        btn.textContent = 'Applied';
+        btn.disabled = true;
+        btn.style.background = '#e0e0e0';
+        btn.style.color = '#666';
+      }
+      
+      return true;
+    }
+    
+    // Filter functionality
     function filterProjects() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const professor = document.getElementById('filterProfessor').value;
-      const topic = document.getElementById('filterTopic').value;
-      const dept = document.getElementById('filterDept').value;
-      let filtered = projects.filter(proj => {
-        let matchesSearch = proj.title.toLowerCase().includes(search) ||
-          proj.professor.toLowerCase().includes(search) ||
-          proj.topic.toLowerCase().includes(search) ||
-          proj.dept.toLowerCase().includes(search) ||
-          proj.skills.some(s => s.toLowerCase().includes(search));
-        let matchesProf = !professor || proj.professor === professor;
-        let matchesTopic = !topic || proj.topic === topic;
-        let matchesDept = !dept || proj.dept === dept;
-        return matchesSearch && matchesProf && matchesTopic && matchesDept;
+      
+      const cards = document.querySelectorAll('.project-card');
+      cards.forEach(card => {
+        const title = card.querySelector('.proj-title').textContent.toLowerCase();
+        const prof = card.querySelector('.proj-prof').textContent.toLowerCase();
+        const topic = card.querySelector('.proj-topic').textContent.toLowerCase();
+        const skills = card.querySelector('.proj-skills').textContent.toLowerCase();
+        
+        const matchesSearch = !search || title.includes(search) || prof.includes(search) || topic.includes(search) || skills.includes(search);
+        const matchesProf = !professor || prof.includes(professor.toLowerCase());
+        
+        card.style.display = (matchesSearch && matchesProf) ? 'flex' : 'none';
       });
-      renderProjects(filtered);
     }
-
-    document.getElementById('searchInput').addEventListener('input', filterProjects);
-    document.getElementById('filterProfessor').addEventListener('change', filterProjects);
-    document.getElementById('filterTopic').addEventListener('change', filterProjects);
-    document.getElementById('filterDept').addEventListener('change', filterProjects);
-
-    // Initial render
-    renderProjects(projects);
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAppliedProjects();
+      
+      // Add event listeners
+      document.getElementById('searchInput').addEventListener('input', filterProjects);
+      document.getElementById('filterProfessor').addEventListener('change', filterProjects);
+      
+      // Add view button event listeners
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const projectId = this.getAttribute('data-project-id');
+          viewProject(parseInt(projectId));
+        });
+      });
+      
+      // Add apply form event listeners
+      document.querySelectorAll('.apply-form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+          const projectId = parseInt(this.getAttribute('data-project-id'));
+          return handleApply(event, projectId);
+        });
+      });
+      
+      // Close modal when clicking outside
+      document.getElementById('projectModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeModal();
+        }
+      });
+    });
   </script>
 </body>
 </html>

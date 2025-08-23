@@ -526,9 +526,19 @@ async def apply_project_student(
         Application.project_id == project_id
     ).first()
     if exists:
+        # Get projects and professors data for the template
+        projects = (
+            db.query(Project, Professor)
+            .join(Professor, Project.professor_id == Professor.id)
+            .filter(Project.status == "active", Project.applications_open == True)
+            .all()
+        )
+        professors = db.query(Professor).all()
         return templates.TemplateResponse("student_browseproject.html", {
             "request": request,
             "user": user,
+            "projects": projects,
+            "professors": professors,
             "error": "You have already applied to this project."
         })
 
@@ -579,6 +589,30 @@ async def update_application_status(request: Request, application_id: int = Form
     app.status = status
     db.commit()
     return RedirectResponse("/professor/applications", status_code=303)
+
+#API endpoint for students to view project details
+@router.get("/api/student/project/{project_id}")
+async def get_student_project_detail(project_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") != "student":
+        return {"error": "Unauthorized"}, 401
+    
+    project = db.query(Project).filter(Project.id == project_id, Project.status == "active", Project.applications_open == True).first()
+    if not project:
+        return {"error": "Project not found or not available"}, 404
+    
+    return {
+        "id": project.id,
+        "title": project.title,
+        "status": project.status,
+        "introduction": project.introduction,
+        "problem_definition": project.problem_definition,
+        "objective": project.objective,
+        "methodology": project.methodology,
+        "scope": project.scope,
+        "timeline": project.timeline,
+        "updated_at": project.updated_at.strftime("%b %d, %Y") if project.updated_at else "",
+        "required_skills": project.required_skills,
+    }
 
 #when professor clicks view profile for an applicant this works
 
