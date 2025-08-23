@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Applications | Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --primary: #1e3c72;
+      --accent: #fbc2eb;
+      --bg: #f6f8fa;
+      --sidebar-bg: #232946;
+      --sidebar-active: #fbc2eb22;
+      --sidebar-hover: #fbc2eb11;
+      --main-radius: 22px;
+      --card-radius: 16px;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 10px rgba(30, 60, 114, 0.07);
+      --status-pending: #ffb347;
+      --status-accepted: #3ecf8e;
+      --status-rejected: #ff6b81;
+      --status-shortlisted: #7ed6df;
+      --status-view: #fbc2eb;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #232946;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0 24px 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      box-shadow: 2px 0 16px 0 #0002;
+    }
+    .sidebar .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      text-align: center;
+      user-select: none;
+    }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 32px;
+      font-size: 1.08rem;
+      color: #fff;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      border-radius: 0 18px 18px 0;
+      transition: background 0.18s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link.active,
+    .sidebar-link:focus {
+      background: var(--sidebar-active);
+      border-left: 4px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link:hover:not(.active) {
+      background: var(--sidebar-hover);
+      color: var(--accent);
+    }
+    .sidebar-footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #fff8;
+      letter-spacing: 0.2px;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 38px 48px 32px 48px;
+      width: calc(100vw - var(--sidebar-width));
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: var(--main-radius) 0 0 var(--main-radius);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    .applications-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 32px;
+      min-width: 800px;
+    }
+    .applications-table th, .applications-table td {
+      padding: 16px 18px;
+      text-align: left;
+      font-size: 1.04rem;
+    }
+    .applications-table th {
+      background: #fbc2eb22;
+      color: #1e3c72;
+      font-weight: 700;
+      font-size: 1.08rem;
+    }
+    .applications-table tr:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+    .applications-table td a {
+      color: var(--primary);
+      text-decoration: underline;
+      font-weight: 500;
+      transition: color 0.18s;
+    }
+    .applications-table td a:hover {
+      color: var(--accent);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.35em 1.3em;
+      border-radius: 18px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--status-pending);
+      box-shadow: 0 1px 6px #fbc2eb22;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .status-pending { background: var(--status-pending); }
+    .status-accepted { background: var(--status-accepted); }
+    .status-rejected { background: var(--status-rejected); }
+    .status-shortlisted { background: var(--status-shortlisted); }
+    .status-view { background: var(--status-view); color: var(--primary);}
+    @media (max-width: 1100px) {
+      .applications-table, .applications-table th, .applications-table td {
+        font-size: 0.98rem;
+        min-width: 600px;
+      }
+      .main-content { padding: 18px 6vw 18px 6vw;}
+    }
+    @media (max-width: 700px) {
+      .main-content { padding: 10px 2vw 10px 2vw;}
+      .page-title { font-size: 1.2rem; }
+      .applications-table th, .applications-table td { padding: 10px 7px;}
+      .applications-table { min-width: 420px;}
+    }
+    @media (max-width: 600px) {
+      .main-content { padding: 6px 2px 6px 2px;}
+      .applications-table { font-size: 0.92rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">ARC Portal</div>
+      <div class="sidebar-nav">
+        <a class="sidebar-link" href="/dashboard/student">&#x1F4C8; Dashboard</a>
+        <a class="sidebar-link" href="/student/browse-projects">&#x1F4D1; Browse Projects</a>
+        <a class="sidebar-link active" href="/student/my-applications">&#x1F4E6; My Applications</a>
+        <a class="sidebar-link" href="/profile/student">&#x1F464; Profile</a>
+        <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
+
+      </div>
+      <div class="sidebar-footer">
+        &copy; 2025 Academic Research Collaboration
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="main-content">
+  <div class="page-title">My Applications</div>
+  <table class="applications-table">
+    <thead>
+      <tr>
+        <th>Project Title</th>
+        <th>Professor</th>
+        <th>Department</th>
+        <th>Date Applied</th>
+        <th>Status</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for application, project, professor in applications %}
+      <tr>
+        <td>{{ project.title }}</td>
+        <td>{{ professor.name }}</td>
+        <td>{{ professor.department or "" }}</td>
+        <td>{{ application.applied_at.strftime('%Y-%m-%d') if application.applied_at else '-' }}</td>
+        <td>
+          <span class="status-badge status-{{ application.status|lower }}">
+              {{ application.status.capitalize() }}
+          </span>
+        </td>
+        <td>
+          <a href="/student/project/{{ project.id }}">View</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" style="text-align:center;color:#888;font-size:1.1rem;">No applications found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
+
+  </div>
+  <script>
+    // Example data - replace with API fetch
+    const applications = [
+      {
+        projectTitle: "AI for Healthcare Analytics",
+        professor: "Prof. X",
+        department: "Information Technology",
+        appliedDate: "2025-04-10",
+        status: "Pending",
+        projectId: 1
+      },
+      {
+        projectTitle: "Blockchain for Academic Records",
+        professor: "Prof. Y",
+        department: "Computer Science",
+        appliedDate: "2025-03-28",
+        status: "Shortlisted",
+        projectId: 2
+      },
+      {
+        projectTitle: "IoT in Smart Campus",
+        professor: "Prof. Z",
+        department: "Electronics",
+        appliedDate: "2025-04-12",
+        status: "Accepted",
+        projectId: 3
+      },
+      {
+        projectTitle: "Natural Language Processing Tools",
+        professor: "Prof. X",
+        department: "Information Technology",
+        appliedDate: "2025-04-16",
+        status: "Rejected",
+        projectId: 4
+      }
+    ];
+
+    function statusClass(status) {
+      switch(status.toLowerCase()) {
+        case "pending": return "status-badge status-pending";
+        case "accepted": return "status-badge status-accepted";
+        case "rejected": return "status-badge status-rejected";
+        case "shortlisted": return "status-badge status-shortlisted";
+        default: return "status-badge status-view";
+      }
+    }
+
+    function renderApplications() {
+      const tbody = document.getElementById('applicationsBody');
+      tbody.innerHTML = '';
+      if(applications.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;color:#888;font-size:1.1rem;'>No applications found.</td></tr>";
+        return;
+      }
+      applications.forEach(app => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${app.projectTitle}</td>
+          <td>${app.professor}</td>
+          <td>${app.department}</td>
+          <td>${app.appliedDate}</td>
+          <td><span class="${statusClass(app.status)}">${app.status}</span></td>
+          <td><a href="projectdetails.html?id=${app.projectId}">View</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    renderApplications();
+  </script>
+</body>
+</html>

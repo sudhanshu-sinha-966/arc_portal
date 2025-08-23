@@ -320,7 +320,7 @@
           <input type="email" id="loginEmail" name="email" placeholder="Institutional Email" required autocomplete="username">
           <input type="password" id="loginPassword" name="password" placeholder="Password" required autocomplete="current-password">
           <input type="hidden" name="role" id="loginRoleInput" value="">
-          <div class="error" id="loginError"></div>
+          <div class="error" id="loginError">{% if login_error %}{{ login_error }}{% endif %}</div>
           <button type="submit">Login</button>
         </form>
 
@@ -340,7 +340,10 @@
           <input type="email" name="email" placeholder="Institutional Email" required>
           <input type="password" name="password" placeholder="Password" required>
           <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-          <div class="error" id="registerStudentError"></div>
+          <div class="error" id="registerStudentError">{% if register_student_error %}{{ register_student_error }}{% endif %}</div>
+          {% if register_student_success %}
+          <div class="success" style="color: #3ecf8e; font-size: 0.97rem; min-height: 22px; letter-spacing: 0.1px; text-align: center;">{{ register_student_success }}</div>
+          {% endif %}
           <button type="submit">Register as Student</button>
         </form>
 
@@ -351,7 +354,7 @@
           <input type="email" name="email" placeholder="Institutional Email" required>
           <input type="password" name="password" placeholder="Password" required>
           <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-          <div class="error" id="registerProfessorError"></div>
+          <div class="error" id="registerProfessorError">{% if register_professor_error %}{{ register_professor_error }}{% endif %}</div>
           <button type="submit" id="profRegisterBtn">Register as Professor</button>
         </form>
       </div>
@@ -451,8 +454,18 @@ registerProfessorBtn.onclick = function() {
   setVisibility(registerProfessorForm);
 };
 
-// --- On page load, show login by default ---
-showLoginBtn.click();
+// --- On page load, show login by default or handle success redirect ---
+// Check if there's a success message to auto-redirect to login
+const hasStudentSuccess = document.querySelector('.success');
+if (hasStudentSuccess) {
+  // If student registration was successful, show login form
+  showLoginBtn.click();
+  setTimeout(() => {
+    loginStudentBtn.click();
+  }, 100);
+} else {
+  showLoginBtn.click();
+}
 
 // --- OPTIONAL: Error/success message auto-clear on any tab switch (improve UX) ---
 function clearMessages() {

@@ -57,9 +57,9 @@ async def register_student_endpoint(
         # Show form again with error
         return templates.TemplateResponse("landing.html",
             {"request": request, "register_student_error": error})
-    # Registration successful, show success message
-    return templates.TemplateResponse("student_postreg.html",
-            {"request": request, "name": "Registration successful! Please login."})
+    # Registration successful, show success message and redirect to login
+    return templates.TemplateResponse("landing.html",
+            {"request": request, "register_student_success": "Registration successful! Please login."})
 
 
 @router.post("/register/professor", response_class=HTMLResponse)
@@ -616,4 +616,26 @@ async def professor_student_profile(student_id: int, db: Session = Depends(get_d
         "emergency_email": getattr(student, "emergency_email", ""),
     }
     return JSONResponse(student_data)
+
+#to get the my applications of student 
+
+@router.get("/student/my-applications", response_class=HTMLResponse)
+async def student_my_applications(request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from model import Application, Project, Professor
+    student_id = int(user.get("id") or user.get("sub"))
+    # Get all applications submitted by this student
+    applications = (
+        db.query(Application, Project, Professor)
+        .join(Project, Application.project_id == Project.id)
+        .join(Professor, Project.professor_id == Professor.id)
+        .filter(Application.student_id == student_id)
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+    return templates.TemplateResponse("student_myapps.html", {
+        "request": request,
+        "user": user,
+        "applications": applications
+    })
+
 

@@ -394,7 +394,7 @@
       <div class="sidebar-nav">
         <a class="sidebar-link active" href="/dashboard/student">&#x1F4C8; Dashboard</a>
         <a class="sidebar-link" href="/student/browse-projects">&#x1F4D1; Browse Projects</a>
-        <a class="sidebar-link" href="studentmyapplication.html">&#x1F4E6; My Applications</a>
+        <a class="sidebar-link" href="/student/my-applications">&#x1F4E6; My Applications</a>
         <a class="sidebar-link" href="/profile/student">&#x1F464; Profile</a>
         <a class="sidebar-link" href="/logout" style="margin-top:20px;color:#fbc2eb;">&#x1F6AA; Logout</a>
       </div>
@@ -412,23 +412,23 @@
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-label">Total Applications</div>
-          <div class="stat-value">{{ total_applications or 0 }}</div>
+          <div class="stat-value">{{user.total_applications}}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Accepted</div>
-          <div class="stat-value">{{ accepted or 0 }}</div>
+          <div class="stat-value">{{accepted}}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Shortlisted</div>
-          <div class="stat-value">{{ shortlisted or 0 }}</div>
+          <div class="stat-value">{{shortlisted}}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Pending</div>
-          <div class="stat-value">{{ pending or 0 }}</div>
+          <div class="stat-value">{{pending}}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Rejected</div>
-          <div class="stat-value">{{ rejected or 0 }}</div>
+          <div class="stat-value">{{rejected}}</div>
         </div>
       </div>
       <div class="skills-section">
